@@ -93,7 +93,10 @@ if [ -n "$MODULES_TAR" ]; then
 else
   say "compiling; Go modules from $PROXY, verified against the release's go.sum"
 fi
+# Run as the invoking user: on Linux with Docker a root container would leave the module cache
+# and the binary owned by root (the cache's zip files are mode 0600), unreadable to this script.
 "$ENGINE" run --rm --platform "$BUILD_PLATFORM" ${NET[@]+"${NET[@]}"} \
+  --user "$(id -u):$(id -g)" -e HOME=/tmp -e GOPATH=/tmp/gopath \
   -v "$SRC:/src:ro" -v "$WORK/gomod:/gomod" -v "$WORK/bin:/out" -w /src \
   -e GOMODCACHE=/gomod -e GOCACHE=/tmp/gocache -e GOFLAGS=-mod=readonly -e GOSUMDB=off \
   -e "GOPROXY=$PROXY" -e CGO_ENABLED=0 -e GOOS=linux -e "GOARCH=$TARGET_ARCH" \
