@@ -110,7 +110,9 @@ jobs:
           fi
 
       - name: Attest build provenance (arm64 image)
-        if: env.PUBLISH == 'true'
+        # GitHub offers artifact attestations for public repositories (and for organisation
+        # plans that include them), not for user-owned private ones: skipped while private.
+        if: env.PUBLISH == 'true' && !github.event.repository.private
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-name: ${{ steps.ns.outputs.namespace }}/istio-pilot
@@ -150,6 +152,9 @@ jobs:
         run: echo "digest=$(scripts/assemble-index.sh "$ARM64_DIGEST")" >> "$GITHUB_OUTPUT"
 
       - name: Attest build provenance (index)
+        # GitHub offers artifact attestations for public repositories (and for organisation
+        # plans that include them), not for user-owned private ones: skipped while private.
+        if: ${{ !github.event.repository.private }}
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
         with:
           subject-name: ${{ env.NS }}/istio-pilot
