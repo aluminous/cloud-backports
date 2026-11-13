@@ -1,0 +1,181 @@
+# istio-pilot 1.10.6: build on a native arm64 runner, verify against the pins, publish the
+# arm64 image and the multi-arch tag (arm64 = this build, amd64 = upstream by digest),
+# attest provenance, and record the digests (published.yaml as a release asset).
+#
+# Pushes only on a tag `istio-pilot-1.10.6*` or a manual run; pull requests build and verify
+# but never log in or push. Third-party actions are pinned by commit SHA (tag in a comment).
+name: istio-pilot
+
+on:
+  push:
+    tags: ["istio-pilot-1.10.6*"]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "images/istio-pilot/**"
+      - "scripts/**"
+      - ".github/workflows/istio-pilot.yml"
+
+permissions: {}
+
+concurrency:
+  group: istio-pilot-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+      namespace: ${{ steps.ns.outputs.namespace }}
+    env:
+      PUBLISH: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Image namespace (registry.env, or the IMAGE_NAMESPACE repository variable)
+        id: ns
+        env:
+          OVERRIDE: ${{ vars.IMAGE_NAMESPACE }}
+        run: |
+          source registry.env
+          echo "namespace=${OVERRIDE:-$IMAGE_NAMESPACE}" >> "$GITHUB_OUTPUT"
+
+      - name: Load the pins
+        run: grep -E '^[A-Z0-9_]+=' images/istio-pilot/1.10.6/inputs.env >> "$GITHUB_ENV"
+
+      - name: Compile and verify (binary sha256 and version)
+        run: scripts/build-istio-pilot.sh --engine docker --save-modules out/istio-go-modules.tar
+
+      - name: Keep the module set (for offline rebuilds)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: istio-go-modules-1.10.6
+          path: out/istio-go-modules.tar
+          retention-days: 30
+
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Log in to GHCR
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (and on tag/dispatch push) the arm64 image
+        id: push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: out/istio-pilot-1.10.6/context
+          file: images/istio-pilot/1.10.6/Containerfile
+          platforms: linux/arm64
+          push: ${{ env.PUBLISH == 'true' }}
+          load: ${{ env.PUBLISH != 'true' }}
+          # A plain image manifest (provenance is attested below instead), so the index can
+          # reference it directly.
+          provenance: false
+          sbom: false
+          tags: ${{ steps.ns.outputs.namespace }}/istio-pilot:1.10.6-arm64
+          build-args: |
+            BASE_IMAGE=${{ env.BASE_IMAGE }}
+            ISTIO_VERSION=${{ env.ISTIO_VERSION }}
+            ISTIO_REVISION=${{ env.ISTIO_REVISION }}
+            SOURCE_URL=${{ env.SOURCE_URL }}
+            SOURCE_SHA256=${{ env.SOURCE_SHA256 }}
+            BINARY_SHA256=${{ env.BINARY_SHA256_ARM64 }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ env.ISTIO_VERSION }}
+            org.opencontainers.image.licenses=Apache-2.0
+
+      - name: Verify the image (config, binary, version)
+        env:
+          REF: ${{ env.PUBLISH == 'true' && format('{0}/istio-pilot@{1}', steps.ns.outputs.namespace, steps.push.outputs.digest) || format('{0}/istio-pilot:1.10.6-arm64', steps.ns.outputs.namespace) }}
+        run: |
+          if [ "$PUBLISH" = true ]; then
+            scripts/verify-image.sh --engine docker --pull "$REF"
+          else
+            scripts/verify-image.sh --engine docker "$REF"
+          fi
+
+      - name: Attest build provenance (arm64 image)
+        if: env.PUBLISH == 'true'
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-name: ${{ steps.ns.outputs.namespace }}/istio-pilot
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+  index:
+    needs: build-arm64
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write # the release asset published.yaml (tags only)
+      packages: write
+      id-token: write
+      attestations: write
+    env:
+      NS: ${{ needs.build-arm64.outputs.namespace }}
+      ARM64_DIGEST: ${{ needs.build-arm64.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Assemble the multi-arch tag (arm64 built here, amd64 upstream by digest)
+        id: index
+        env:
+          IMAGE_NAMESPACE_OVERRIDE: ${{ env.NS }}
+        run: echo "digest=$(scripts/assemble-index.sh "$ARM64_DIGEST")" >> "$GITHUB_OUTPUT"
+
+      - name: Attest build provenance (index)
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-name: ${{ env.NS }}/istio-pilot
+          subject-digest: ${{ steps.index.outputs.digest }}
+          push-to-registry: true
+
+      - name: Record the digests (published.yaml)
+        env:
+          INDEX_DIGEST: ${{ steps.index.outputs.digest }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          scripts/write-published.py --namespace "$NS" --index-digest "$INDEX_DIGEST" \
+            --arm64-digest "$ARM64_DIGEST" --source-revision "$GITHUB_SHA" --run-url "$RUN_URL"
+          cat published.yaml >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: published
+          path: published.yaml
+
+      - name: Attach published.yaml to the release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "$TAG" --notes "See published.yaml for the digests."
+          gh release upload "$TAG" published.yaml --clobber

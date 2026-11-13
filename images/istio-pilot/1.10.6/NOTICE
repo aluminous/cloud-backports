@@ -1,0 +1,16 @@
+istio-pilot 1.10.6 (arm64 backport)
+
+This image contains pilot-discovery from Istio 1.10.6, Copyright Istio Authors, licensed
+under the Apache License, Version 2.0 (LICENSE in this folder). It was compiled without
+modification from the upstream release source
+  https://github.com/istio/istio/archive/refs/tags/1.10.6.tar.gz
+  (sha256 c737648a6dc6b4bb3a5ac1dfc202469ced73e54c83cc591db917120c5590aae4,
+   revision fd053c6165d21105d66dac6e3d0649db2dde5b86)
+for linux/arm64, with the flags of the upstream release build. The build inputs and the
+binary's sha256 are in BUILD-METADATA.json.
+
+The binary statically links Go modules under their own licences; the licence texts that
+Istio ships for them are in licenses/ (copied from the same source archive).
+
+This is not an official Istio release and is not endorsed by the Istio project.
+Istio does not ship a NOTICE file of its own for this release.

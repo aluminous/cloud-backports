@@ -1,0 +1,37 @@
+# istio-pilot 1.10.6 for linux/arm64: the binary built and verified by
+# scripts/build-istio-pilot.sh (the build context is its output folder, out/istio-pilot-1.10.6/context).
+#
+# Matches what the 1.10 istiod chart expects from docker.io/istio/pilot:1.10.6:
+#   - /usr/local/bin/pilot-discovery, ENTRYPOINT ["/usr/local/bin/pilot-discovery"] (the chart
+#     passes `discovery` and flags as args);
+#   - USER 1337:1337 (the chart also sets runAsUser/runAsGroup 1337, runAsNonRoot);
+#   - working directory / : istiod reads ./etc/istio/config/mesh relative to it (absent in the
+#     1.10 chart, so istiod uses the `istio` ConfigMap); a home folder it cannot read breaks start;
+#   - writable /tmp and CA certificates (the base provides them).
+# Differences from upstream: base image (distroless static instead of Ubuntu), and the
+# licences of Istio and of every Go module in the binary under /usr/share/doc/istio-pilot/.
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+
+ARG ISTIO_VERSION
+ARG ISTIO_REVISION
+ARG SOURCE_URL
+ARG SOURCE_SHA256
+ARG BINARY_SHA256
+
+COPY pilot-discovery /usr/local/bin/pilot-discovery
+COPY LICENSE NOTICE BUILD-METADATA.json /usr/share/doc/istio-pilot/
+COPY licenses/ /usr/share/doc/istio-pilot/licenses/
+
+USER 1337:1337
+WORKDIR /
+ENTRYPOINT ["/usr/local/bin/pilot-discovery"]
+
+LABEL org.opencontainers.image.title="istio-pilot (arm64 backport)" \
+      org.opencontainers.image.description="Istio ${ISTIO_VERSION} pilot-discovery built from the exact release source for linux/arm64; not an official Istio image" \
+      org.opencontainers.image.version="${ISTIO_VERSION}" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      dev.cloud-backports.upstream.source="${SOURCE_URL}" \
+      dev.cloud-backports.upstream.source-sha256="${SOURCE_SHA256}" \
+      dev.cloud-backports.upstream.revision="${ISTIO_REVISION}" \
+      dev.cloud-backports.binary-sha256="${BINARY_SHA256}"

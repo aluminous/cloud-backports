@@ -1,0 +1,7 @@
+# build outputs and caches (scripts/build-istio-pilot.sh)
+/out/
+/.cache/
+# digests of a release, written by CI and attached to the GitHub release
+/published.yaml
+__pycache__/
+*.pyc
