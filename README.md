@@ -7,7 +7,7 @@ longer publishes, kept runnable for testing against platforms that still run the
   exact upstream release source with pinned inputs, so old platform versions run natively on
   Apple Silicon and arm64 CI. Each is published under one multi-arch tag: arm64 is built here,
   amd64 is upstream's official image carried over by digest (not rebuilt).
-- **Archives (prepared, not published):** upstream images that have disappeared from their
+- **Archives (published):** upstream images that have disappeared from their
   registries, preserved unmodified: five Spinnaker 1.25.4 service images and the echo that
   the old capture run used (`spinnaker-<service>`, linux/amd64), with the source of their
   GPL/LGPL packages. See [Spinnaker 1.25.4 archive](#spinnaker-1254-archive).
@@ -47,15 +47,18 @@ GitHub release.
 
 ## Spinnaker 1.25.4 archive
 
-Prepared for a public release, **not published**: nothing has been pushed anywhere (the steps
-are the checklist in [BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing)). The images are
+Published as the public GHCR packages `ghcr.io/aluminous/cloud-backports/spinnaker-<service>`
+and as the assets of the GitHub release
+[`spinnaker-1.25.4`](https://github.com/aluminous/cloud-backports/releases/tag/spinnaker-1.25.4)
+(the five archives, the source bundle and `published.yaml`; how: the checklist in
+[BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing)). The images are
 upstream's own, saved from `us-docker.pkg.dev/spinnaker-community/docker/` before the tags
 were removed (on 2026-11-14 they no longer resolve there or at `gcr.io/spinnaker-marketplace`,
 [BUILDING.md](BUILDING.md#upstream-check)). Nothing is rebuilt or modified: each image keeps
 its original configuration (its image ID) and every layer byte for byte. All are
 linux/amd64, `docker-archive` format source, Alpine Linux base, Alpine's OpenJDK 11.
 
-| Image (as it would be published) | Original reference | Archive | Image ID (config digest) | Layers | Base | JVM |
+| Image | Original reference | Archive | Image ID (config digest) | Layers | Base | JVM |
 |---|---|---|---|---|---|---|
 | `spinnaker-clouddriver:7.3.3-20210322155326` | `us-docker.pkg.dev/spinnaker-community/docker/clouddriver:7.3.3-20210322155326` | 1,598,071,296 bytes, sha256 `39914318…f0ea` | `sha256:48a25fb6fb34…c3b8` | 14 | Alpine 3.12.4 | OpenJDK 11.0.9 |
 | `spinnaker-front50:0.26.2-20210216140019` | `…/front50:0.26.2-20210216140019` | 313,381,888 bytes, sha256 `654972c7…2950` | `sha256:7c65eaab9171…001b` | 6 | Alpine 3.11.7 | OpenJDK 11.0.5 |
@@ -86,18 +89,29 @@ next to the images: [`images/spinnaker/1.25.4/NOTICE`](images/spinnaker/1.25.4/N
 what is in it and how it was checked.
 
 For the five archive images the pushed manifest is an OCI manifest over the original,
-uncompressed layers, so its digest depends on nothing but the archive and is pinned too. Once published, pin by digest as for
-istio-pilot (`ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest>` from
-`published.yaml`); to check a published copy against the pins:
+uncompressed layers, so its digest depends on nothing but the archive and is pinned too.
+**Pin by digest.** The six references, as in the release's `published.yaml`:
+
+```
+ghcr.io/aluminous/cloud-backports/spinnaker-clouddriver:7.3.3-20210322155326@sha256:33f0c306ce74ab06c1e61b2b6d37d494e53d737c7597ddc66adf8a6b28435bd5
+ghcr.io/aluminous/cloud-backports/spinnaker-front50:0.26.2-20210216140019@sha256:232ceccad4d556151749e48985ef549d782c1a1ade5081e547a8cc88db99425e
+ghcr.io/aluminous/cloud-backports/spinnaker-gate:1.21.0-20210215200018@sha256:a4f9ebe8234e23035e59305edb05f3447aa705dc590834ebd947428261b9e5da
+ghcr.io/aluminous/cloud-backports/spinnaker-orca:2.19.0-20210209140018@sha256:a0aecabff105be04d9cd3344dc1b8ea018728c5151483810cff634448da92491
+ghcr.io/aluminous/cloud-backports/spinnaker-rosco:0.24.0-20210210110018@sha256:e0c6fc6b5016e7f2c2b60ad1a0e2cf0dc7f44101a15cc2371696d8ed0d466802
+ghcr.io/aluminous/cloud-backports/spinnaker-echo:2.15.0-20201009170017@sha256:6765ce1cdaf16733cf61550d0f7067fb6bc2830e56c6decd90f6499a7f19bdcd
+```
+
+To check them against the pins (anonymous; the packages are public):
 
 ```bash
 scripts/verify-spinnaker.py                    # manifest, config and diff_ids from the registry
 scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.8 GB)
 ```
 
-The five archives are uploaded once as assets of a GitHub release and a workflow
-(`.github/workflows/spinnaker-archive.yml`) pushes them with the job's own token.
-These are 2021 images with unmaintained components; use them for tests only.
+The five archives are assets of the GitHub release and a workflow
+(`.github/workflows/spinnaker-archive.yml`) pushed them with the job's own token. Pulling
+with Docker Engine, containerd or Kind nodes, and running the containers, has not been tested;
+the registry side (anonymous manifest, config and layer checks) has. These are 2021 images with unmaintained components; use them for tests only.
 
 ## Pull
 
@@ -203,8 +217,8 @@ actions are pinned by commit SHA.
 (never for a pull request): it downloads the archives and the source bundle from the
 release, checks them against the pins, pushes the images to GHCR with the job's own
 `GITHUB_TOKEN`, copies echo from gcr.io by digest, verifies every layer against the pins and
-attaches `published.yaml` to the release. Linted with actionlint; its steps were run locally
-against a local registry, the workflow itself has not run on GitHub.
+attaches `published.yaml` to the release. It has run on GitHub: the release `spinnaker-1.25.4`
+was pushed and verified by it.
 
 ## Licences
 

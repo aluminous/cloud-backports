@@ -121,9 +121,10 @@ The sixth, echo 2.15.0-20201009170017, is copied from `gcr.io/spinnaker-marketpl
 digest. Alongside the images a **source bundle** with the corresponding source of the
 GPL/LGPL-licensed packages is released.
 
-### Checklist: publish without a personal token
+### Checklist: how the archive was published, and how to publish a new archive release
 
-The route needs no personal access token: the archives and the source bundle are uploaded once
+This is the route used for `spinnaker-1.25.4`; for a new release, change the pins and the tag
+name. It needs no personal access token: the archives and the source bundle are uploaded once
 as assets of a GitHub release, and a workflow downloads them and pushes with the job's own
 `GITHUB_TOKEN` (`packages: write`).
 
@@ -141,20 +142,23 @@ as assets of a GitHub release, and a workflow downloads them and pushes with the
    the five archive files, as in the manual route below):
    `scripts/create-spinnaker-release.sh --archive-dir "$ARCHIVES" --sources-tar out/spinnaker-1.25.4-sources.tar`
    (prints what it would upload).
-4. Create the draft release and upload the six files (about 3.8 GB; each is under the
-   2 GiB asset limit, clouddriver is 1.6 GB): the same command with `--run`, with `gh` logged in
-   as a user who may create releases (`gh auth login`).
+4. Create the draft release and upload the files (the five archives and the source bundle,
+   about 3.8 GB; each is under the 2 GiB asset limit, clouddriver is 1.6 GB): the same command
+   with `--run`, with `gh` logged in as a user who may create releases (`gh auth login`).
 5. In the GitHub UI, look at the draft's assets, then **publish** the release. Publishing creates
-   the tag `spinnaker-1.25.4`, and the tag push should start
-   `.github/workflows/spinnaker-archive.yml`. Look in the Actions tab; **if no run appears
-   within a minute or two, start it by hand** with the release tag: Actions, spinnaker-archive,
-   Run workflow, `release_tag` = `spinnaker-1.25.4`, or
-   `gh workflow run spinnaker-archive.yml -f release_tag=spinnaker-1.25.4`. The release must be
-   published first in either case: the workflow downloads the assets with `gh release download`,
-   which is expected to find a release by tag only once it is published, not while it is a
-   draft (not tested). To run again after a failure, use the same manual start; pushes are
-   idempotent (blobs already in the registry are skipped, manifests are put again with the same
-   digests).
+   the tag `spinnaker-1.25.4`, and the tag push starts
+   `.github/workflows/spinnaker-archive.yml`. The release must be published first, because the
+   workflow downloads the assets with `gh release download`, which finds a release by tag only
+   once it is published. **To run the workflow again** (after a fix on `main`, or if no run
+   appeared), start it by hand with the release tag: Actions, spinnaker-archive, Run workflow,
+   `release_tag` = `spinnaker-1.25.4`, or
+   `gh workflow run spinnaker-archive.yml -f release_tag=spinnaker-1.25.4`. A run started by
+   hand uses the workflow and scripts of the branch it is started on; the tag keeps pointing at
+   the commit that was current when the release was published, so a tag-triggered run never
+   sees later fixes. Pushes are idempotent (blobs already in the registry are skipped, manifests
+   are put again with the same digests). For `spinnaker-1.25.4` the tag run failed at the push
+   step (see "How the images are pushed") and pushed nothing; the run started by hand on `main`
+   succeeded.
 6. The workflow downloads the assets, checks the source bundle and the archives against the
    pins, pushes the five archive images and copies echo, runs
    `scripts/verify-spinnaker.py --blobs` (every manifest, config and layer byte against the
@@ -162,13 +166,12 @@ as assets of a GitHub release, and a workflow downloads them and pushes with the
    not match its pin fails the run before any push (the archive check step runs first); a
    manifest digest that differs from its pin fails that image before its upload, but images
    pushed earlier in the same run stay in the registry.
-7. **In the GitHub UI, after the first push:** open each new package (your profile, Packages:
-   `spinnaker-clouddriver`, `-front50`, `-gate`, `-orca`, `-rosco`, `-echo`), Package settings,
-   Change visibility, **Public**. Packages pushed by a workflow in a public repository may still
-   start private; until they are public, anonymous pulls fail. Also check that each package
-   shows the repository as its source (the manifests carry the
-   `org.opencontainers.image.source` annotation; if a package is not linked, use "Connect
-   repository" in its settings).
+7. **Check the packages' visibility** (your profile, Packages: `spinnaker-clouddriver`,
+   `-front50`, `-gate`, `-orca`, `-rosco`, `-echo`). The six packages created by the workflow in
+   this public repository came up public without any UI step (anonymous `tags/list` answers 200
+   for each); for a new package, confirm that, and if it is private use Package settings,
+   Change visibility, Public. Also check that each package shows the repository as its source
+   (the manifests carry the `org.opencontainers.image.source` annotation).
 8. Check from a machine without credentials:
    `scripts/verify-spinnaker.py --blobs`, and
    `podman pull --platform linux/amd64 ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest from published.yaml>`.
@@ -197,11 +200,16 @@ For each archive image, one at a time, `push-spinnaker.py` checks the archive fi
 config digest (the image ID) and the layer count against the pins; hashes every layer and
 compares it with its `diff_id`; builds the OCI manifest and compares its digest with the pin
 (a mismatch aborts before any upload); uploads the layers, the config and then the manifest
-(chunked, skipping blobs the repository already has); and checks that the registry reports the
+(skipping blobs the repository already has); and checks that the registry reports the
 pinned digest. The pushed layers are the archive's own uncompressed tars (media type
 `application/vnd.oci.image.layer.v1.tar`) and the config is the archive's own config file, so
 the registry holds the original image ID and diff_ids, and the manifest depends on nothing but
-the archive. Compressing the layers (gzip) was tried first and rejected: the same input and
+the archive. Each blob is streamed in one PATCH request, as container engines do; if a
+registry refuses that, the script falls back to Content-Range chunks of 4 MiB, and
+`SPINNAKER_UPLOAD_CHUNK=<bytes>` forces a chunk size. (ghcr.io answered HTTP 416 "request body
+is too large" to 32 MiB chunks, and accepted the streamed request.)
+
+Compressing the layers (gzip) was tried first and rejected: the same input and
 level gave different bytes with classic zlib 1.2.12 (macOS) and zlib-ng 1.3.1 (Fedora's
 Python 3.14), so a manifest digest could not be pinned across machines. The same manifest
 digests came out of `--convert-only` on macOS (Python 3.15) and in the Podman machine
@@ -217,9 +225,10 @@ digests came out of `--convert-only` on macOS (Python 3.15) and in the Podman ma
 | **total** | **3,101,096,960** | **1,574,600,071 (50.8%)** | **1,570,185,655 (50.6%)** | **1,490,612,069 (48.1%)** | **1,337,971,649 (43.1%)** |
 
 (`scripts/measure-spinnaker-compression.py`; gzip with Python's zlib 1.2.12, zstd with Python
-3.15's `compression.zstd` and 4 threads; the tar framing of the archives is not counted.) Whether
-ghcr.io, Docker Engine and old container runtimes accept uncompressed OCI layers was tested only
-with a `registry:2` registry and Podman 6.1.
+3.15's `compression.zstd` and 4 threads; the tar framing of the archives is not counted.)
+ghcr.io accepts the uncompressed OCI layers, the docker-format config under the OCI manifest and
+echo's docker v2 manifest unchanged. Pulling with Docker Engine, containerd or Kind nodes was
+not tested; Podman 6.1 pulled gate and echo by digest from a local registry.
 
 Echo is copied differently: `push-spinnaker.py` reads its manifest from `gcr.io` by the pinned
 digest, checks that the bytes hash to that digest, downloads the config and every layer (each
@@ -256,13 +265,12 @@ pinned image ID `7c2e8142…5c00` and manifest digest `a4f9ebe8…e5da`, the pul
 pinned image ID `c6ca278c…0758` and upstream's manifest digest `6765ce1c…bdcd`. Over the
 internet the time is the upload of 3.1 GB.
 
-The workflow's steps were also run locally: every `run:` step of `spinnaker-archive.yml`, in
-order, with the same scripts, against the local registry, with a directory of symlinks to the
-archives and the source bundle standing in for the release assets and a stub `gh` that copies
-files (download) and records the upload of `published.yaml`. All passed. Not exercised
-locally, because they need GitHub: the two actions, `gh release download`/`upload` against a
-real release, the `GITHUB_TOKEN` permissions, and ghcr.io itself (authentication by token,
-acceptance of uncompressed OCI layers and of the docker-format config, package visibility).
+Before the release, every `run:` step of `spinnaker-archive.yml` was run locally in order
+against the local registry (a directory of symlinks and a stub `gh` standing in for the release
+assets). On GitHub, run 43545520704 (started by hand on `main` at 5ab773a with
+`release_tag=spinnaker-1.25.4`) pushed or copied all six images with exactly the pinned digests
+and passed `verify-spinnaker.py --blobs`; anonymous `verify-spinnaker.py` from a laptop passes
+for all six.
 
 ### Source bundle
 
