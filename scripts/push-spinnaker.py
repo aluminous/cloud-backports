@@ -5,7 +5,9 @@
                       [--auth-file FILE]
                       [--convert-only] [--result FILE.json]
 
-Pushes <NS>/spinnaker-<service>:<version> for each pinned image, one image at a time:
+Pushes <NS>/spinnaker-<service>:<version> for each pinned image, one image at a time. Images
+with MODE=copy in the pins (echo) are instead copied from their source registry by digest,
+manifest bytes unchanged, and every blob is hashed on the way. For the others:
 
   1. the archive file must have the pinned sha256, and its image config the pinned digest
      (the image ID) and layer count;
@@ -63,13 +65,13 @@ def main() -> None:
                    if os.environ.get("SPINNAKER_ARCHIVE_DIR") else None)
     p.add_argument("--namespace", help="registry namespace (default: registry.env)")
     p.add_argument("--only", action="append", help="push only this service (repeatable)")
-    p.add_argument("--insecure", action="store_true", help="plain http (local registry)")
+    p.add_argument("--insecure", action="store_true",
+                   default=os.environ.get("SPINNAKER_REGISTRY_INSECURE") == "1",
+                   help="plain http (local registry); also SPINNAKER_REGISTRY_INSECURE=1")
     p.add_argument("--auth-file")
     p.add_argument("--convert-only", action="store_true")
     p.add_argument("--result", type=Path, help="write the pushed digests as JSON")
     a = p.parse_args()
-    if not a.archive_dir:
-        p.error("--archive-dir (or SPINNAKER_ARCHIVE_DIR) is required")
     env, pins = sa.load_pins(a.only)
     ns = sa.namespace(a.namespace)
     host, _, base = ns.partition("/")
@@ -79,6 +81,22 @@ def main() -> None:
     for pin in pins:
         t0 = time.time()
         print(f"==> {pin.service} {pin.version}", flush=True)
+        if pin.mode == "copy":
+            if a.convert_only:
+                print("    copy mode: checked against the source registry at push time")
+                continue
+            src_host, src_repo, _ = sa.split_reference(pin.original)
+            got = sa.copy_image(sa.Registry(src_host), src_repo, reg, f"{base}/{pin.repo_name}", pin,
+                                log=lambda m: print(m, flush=True))
+            print(f"    copied {pin.reference(ns)}@{got}", flush=True)
+            results.append({"service": pin.service, "version": pin.version,
+                            "reference": pin.reference(ns), "digest": got,
+                            "config_digest": pin.config_digest, "archive_sha256": "",
+                            "origin": pin.origin, "original_reference": pin.original})
+            print(f"    {time.time() - t0:.1f}s", flush=True)
+            continue
+        if not a.archive_dir:
+            p.error("--archive-dir (or SPINNAKER_ARCHIVE_DIR) is required for archive images")
         archive = sa.check_archive(pin, a.archive_dir)
         print(f"    archive ok: sha256 {pin.archive_sha256[:12]}, config {pin.config_digest[7:19]}, "
               f"{pin.layers} layers", flush=True)

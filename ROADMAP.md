@@ -27,42 +27,45 @@ performance; and that it requires binfmt emulation on every node, which the offi
 does not. It would be published clearly named (e.g. `istio-proxyv2-hybrid:1.10.6`), never
 under the upstream name.
 
-## The Spinnaker 1.25.4 service images archive: prepared, not published
+## The Spinnaker 1.25.4 service images archive: prepared for a public release, not published
+
+**To publish** (nothing has been pushed anywhere; full steps in [BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing)):
+
+1. Open owner todo: merge the branch, then run `scripts/create-spinnaker-release.sh --run` on the
+   machine that holds the archives. It needs `gh` logged in with permission to create releases
+   (a one-time upload of about 3.7 GB as release assets).
+2. Publish the draft release in the GitHub UI: the new tag `spinnaker-1.25.4` starts the
+   workflow, which pushes the images to GHCR with the job's own `GITHUB_TOKEN`.
+3. In the GitHub package settings, set each new package public.
+
+**No personal access token is needed** for this route. The alternative manual route
+(`scripts/push-spinnaker.py` from the archive machine) needs a classic token with
+`write:packages`; the token is deferred, so it is not the plan.
 
 Mockyard's Spinnaker emulator is checked against golden captures from real Spinnaker
-1.25.4. Upstream no longer serves those service images (the `us-docker.pkg.dev/spinnaker-community/docker/*`
-tags are gone), so re-running a capture depends on a local cache on the maintainer's machine
-(the old test harness's bundle cache), which holds five of them as amd64 archives: clouddriver
-7.3.3-20210322155326 (1.6 GB), rosco 0.24.0-20210210110018 (0.57 GB), orca 2.19.0-20210209140018
-(0.32 GB), front50 0.26.2-20210216140019 (0.31 GB) and gate 1.21.0-20210215200018 (0.30 GB),
-about 3.1 GB in all.
+1.25.4. Upstream no longer serves those service images (the
+`us-docker.pkg.dev/spinnaker-community/docker/*` tags are gone), so re-running a capture
+depends on a local cache on the maintainer's machine (the old test harness's bundle cache),
+which holds five of them as amd64 archives: clouddriver 7.3.3-20210322155326 (1.6 GB), rosco
+0.24.0-20210210110018 (0.57 GB), orca 2.19.0-20210209140018 (0.32 GB), front50
+0.26.2-20210216140019 (0.31 GB) and gate 1.21.0-20210215200018 (0.30 GB), about 3.1 GB in all.
+A sixth image, echo 2.15.0-20201009170017 (the echo the capture run used, not the release's),
+is still served by `gcr.io/spinnaker-marketplace` and is copied from there by digest.
 
-State: **prepared, not pushed anywhere.** The pins (`images/spinnaker/1.25.4/inputs.env`), the
-push and verify scripts, the provenance `NOTICE` and the documentation are in place, and the
-scripts have been run against a throwaway local registry ([BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing)).
 This is **archiving, not backporting**: the same amd64 images, preserved; nothing rebuilt. They
-would be published as `spinnaker-<service>:<version>` with a `published.yaml` per release. There
-is no workflow: upstream no longer serves the images, so CI has no source to copy from, and the
-publish is a manual run on the machine that holds the archives.
+are published as `spinnaker-<service>:<version>` with a `published.yaml` per release. Layers are
+pushed uncompressed so that the manifest digests are reproducible from the archives; gzip
+would cut the layer bytes by about half (3.10 GB to 1.57 GB at level 6 and 1.57 GB at level 9),
+zstd by more (1.49 GB at level 3, 1.34 GB at level 19), but the compressed bytes depend on the
+compressor implementation, so the digests could not be pinned across machines.
 
-Licence position: Spinnaker is Apache-2.0, so redistribution of the services is allowed with the
-licence. The images also contain Alpine Linux, Alpine's OpenJDK 11 and further tools with their
-own licences, including GPL-2.0, GPL-3.0 and GPL-2.0-with-Classpath-exception components, whose
-redistribution obliges offering the corresponding source. The facts (versions, where the source
-for each package is available) are in `images/spinnaker/1.25.4/NOTICE`; this repository does not
-host that source. Until the obligation is met in a way the owner accepts, the packages are best
-kept private to the organisation.
-
-Open decisions for the owner before anything is pushed:
-
-* Public or private package? Public needs the source offer settled (host the source of the
-  GPL packages next to the images, or keep the packages private).
-* Whether to add echo, which the old real-Spinnaker capture used as
-  `gcr.io/spinnaker-marketplace/echo:2.15.0-20201009170017` (not the release's echo, 2.16.0). It is
-  still served upstream by digest, so it could be copied registry to registry in CI instead of
-  archived.
-* Whether to publish with compressed layers (about half the size on the wire and in storage,
-  but the digests then depend on the compressor), or as pinned now (uncompressed layers).
+Licence position: Spinnaker is Apache-2.0, so redistribution of the services is allowed with
+the licence. The images also contain Alpine Linux, Debian (echo), OpenJDK 11 and further tools
+with their own licences, including GPL-2.0, GPL-3.0 and GPL-2.0-with-Classpath-exception
+components, whose redistribution obliges offering the corresponding source. The packages are to
+be public, so the corresponding source of the GPL/LGPL packages is prepared as a bundle
+(`scripts/build-spinnaker-sources.py`) that is offered as a release asset next to the images;
+the facts are in `images/spinnaker/1.25.4/NOTICE`. This is a working position, not legal advice.
 
 An arm64 rebuild from source (Gradle, 2021 toolchains) would be a real backport and much more
 work; amd64 under emulation was adequate for capture runs.

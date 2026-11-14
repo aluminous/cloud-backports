@@ -2,7 +2,7 @@ Spinnaker 1.25.4 service images (archive)
 
 What these are
   The service images of Spinnaker release 1.25.4 (clouddriver, front50, gate, orca, rosco),
-  linux/amd64, exactly as upstream built them. Nothing was rebuilt, patched or modified: each
+  linux/amd64, exactly as upstream built them, and echo 2.15.0-20201009170017 (see below). Nothing was rebuilt, patched or modified: each
   image's configuration (its image ID) and every layer are byte for byte those of the archive
   they were taken from. The only new thing is the registry packaging: an OCI manifest that
   lists the original layers (uncompressed, as in the archive) and the original configuration,
@@ -23,8 +23,19 @@ Where and when they were obtained
   orca         2.19.0-20210209140018       sha256:13efa8585e466b601cbb01ab4b0b92915d4cc8143ea1d0ead8cd6a9b8a87e1b2
   rosco        0.24.0-20210210110018       sha256:f12a552b5f961f9bbe50667f8fab1c1ae9447ad72b2b9a8f8a840a9d0298841c
 
-  The versions are those of the release's bill of materials (1.25.4, 2021-03-30). Echo,
-  Deck, Fiat, Igor, Kayenta and the monitoring services of the release are not included.
+  The versions are those of the release's bill of materials (1.25.4, 2021-03-30). Deck, Fiat,
+  Igor, Kayenta and the monitoring services of the release are not included.
+
+  echo        2.15.0-20201009170017       sha256:c6ca278c9cc43aa76775110707d75c032261227ecb11f844d6659e0d0a490758
+
+  The echo image is NOT the echo of release 1.25.4 (the bill of materials names
+  2.16.0-20210208200018, which no registry serves). It is the echo that the old harness's
+  real-Spinnaker capture ran, and gcr.io/spinnaker-marketplace/echo:2.15.0-20201009170017 is
+  still served by upstream. It is copied from there by digest with its manifest unchanged
+  (manifest sha256:6765ce1cdaf16733cf61550d0f7067fb6bc2830e56c6decd90f6499a7f19bdcd, upstream's
+  own digest; gzip layers as upstream serves them), not from a local archive. It is
+  Debian GNU/Linux 10.6 based (not Alpine), 178 dpkg packages, with an OpenJDK 11.0.9 in
+  /usr/local/openjdk-11 (its release file: IMPLEMENTOR "N/A", IMPLEMENTOR_VERSION "18.9").
 
 Licence of Spinnaker
   The services are part of Spinnaker (https://github.com/spinnaker), Copyright the Spinnaker
@@ -51,12 +62,38 @@ Third-party content in the images (facts read from the layers)
     libtasn1, pax-utils, apk-tools, and in clouddriver also git, util-linux, e2fsprogs, xz,
     gettext, wget, libidn2. Two packages (libxrender, libxtst) record the licence "custom";
     libssl/libcrypto 1.1 record "OpenSSL".
-  clouddriver, further: Python (PYTHON_VERSION 3.7.10), AWS CLI 1.18.152, kubectl 1.18.10,
-    Google Cloud SDK 313.0.1 (with its LICENSE at /opt/google-cloud-sdk), aws-iam-authenticator
-    0.4.0, ecr-token v1.0.2 (versions from the image's environment variables; not checked
-    file by file).
-  rosco, further: HashiCorp Packer 1.6.6 and kustomize 3.8.5 (from the image's environment
-    variables; not checked file by file).
+  echo (Debian GNU/Linux 10.6): 178 dpkg packages; 132 of them record a GPL or LGPL licence in
+    their copyright file or (where it is unstructured text) in its wording, from 82 source
+    packages, among them glibc, gcc-8 (libgcc1, libstdc++6), bash, coreutils, util-linux,
+    systemd, perl, git, gnupg2, gnutls28, mercurial, subversion. The JVM in /usr/local/openjdk-11
+    is OpenJDK 11.0.9 (release file as above); its licence is GPL-2.0 with the Classpath
+    exception; the corresponding upstream source is the tag jdk-11.0.9-ga of
+    https://github.com/openjdk/jdk11u (the same tarball as for Alpine's 11.0.9 build, in the
+    bundle under alpine/openjdk11-11.0.9_p11-r0/source/). Sources not recorded as GPL/LGPL in the
+    image (so not in the bundle): fontconfig, apr, apr-util, db5.3, cdebconf, openldap,
+    ncurses, p11-kit, pcre2, pcre3, openssl, tzdata, unzip (recorded licences are
+    missing or unstructured; the full list with licence fields is images/spinnaker/1.25.4/
+    packages.tsv, class "check" or "permissive").
+  Package totals (packages.tsv): 113 distinct apk package versions (48 with a GPL or LGPL
+    licence field) in the five Alpine images, built from 60 aports origins (37 origin-and-commit
+    builds of them carry a GPL/LGPL package); 178 dpkg packages (132 GPL/LGPL, 28 unclassified, 18 permissive) in echo. No package has only an MPL,
+    CDDL or EPL licence field; ca-certificates records "MPL-2.0 GPL-2.0-or-later" (Alpine) and
+    "GPL-2+ MPL-2.0" (Debian).
+  Bundled tools that are not distribution packages (from files in the layers):
+    clouddriver: Python 3.7.10 under /usr/local (LICENSE.txt, PSF), AWS CLI 1.18.152 and
+      botocore 1.18.11 (package metadata: Apache License 2.0), s3cmd 2.0.2 (package metadata:
+      "GNU GPL v2+"; installed as Python source, /usr/local/bin/s3cmd and its modules), docutils
+      0.15.2 (metadata: public domain, Python, 2-Clause BSD, GPL 3 for parts), PyYAML, urllib3,
+      six, jmespath and other Python packages (MIT/BSD per their metadata), Google Cloud SDK
+      313.0.1 at /opt/google-cloud-sdk (its LICENSE: Apache License 2.0 "unless otherwise
+      specified"; it bundles further Python packages), kubectl 1.18.10 and aws-iam-authenticator
+      0.4.0 (Go binaries; upstream licence Apache-2.0, from upstream, not read from the image),
+      ecr-token (version from the environment variable ECR_TOKEN_VERSION).
+    rosco: HashiCorp Packer 1.6.6 at /packer/packer (upstream licence MPL-2.0), kustomize 3.8.5
+      at /packer/kustomize/kustomize (upstream Apache-2.0), helm, helm3 and tiller in
+      /usr/local/bin (upstream Apache-2.0). Licences stated "upstream" were not read from the
+      image. The Go binaries' source is the upstream project at the tagged version, which this
+      repository does not host.
 
 Where the corresponding source of the distribution packages is available
   Each apk package record in /lib/apk/db/installed names its origin and the Alpine `aports`
@@ -69,11 +106,26 @@ Where the corresponding source of the distribution packages is available
   jdk-11.0.9-ga / jdk-11.0.5-ga of https://github.com/openjdk/jdk11u (both tags resolve); the
   binary packages are still served at https://dl-cdn.alpinelinux.org/alpine/<v3.11|v3.12>/
   (openjdk11-jre-headless 11.0.5_p10-r0 and 11.0.9_p11-r0 checked).
-  This repository does not host the source of these packages. What would make a source
-  archive possible without further research: for each image, the list of (package, version,
-  aports commit) from the apk database (scripts/inventory-spinnaker.py --json writes it), the
-  APKBUILD at that commit, and the tarballs named by `source=` in it, saved and published next
-  to the images. That has not been done.
+  Echo (Debian 10.6): the source packages are on snapshot.debian.org
+  (https://snapshot.debian.org/mr/package/<source>/<version>/srcfiles), listed in
+  /var/lib/dpkg/status of the image (Source and Version fields).
+
+The source bundle
+  The corresponding source of every package whose recorded licence includes the GPL or LGPL
+  (37 Alpine source packages, 82 Debian source packages: 119 in all, 511 files, none missing)
+  is collected in the release asset spinnaker-1.25.4-sources.tar (620,062,720 bytes, sha256
+  b4b8e62a5fc2fc1d397ce587c25f5c209128b1bc48edc3e2c80abcb7c64d344a), released next to the images.
+  It contains, per Alpine package, every file of the package's aports directory at the recorded
+  commit (APKBUILD and patches) and every remote source file of its APKBUILD, each checked
+  against the APKBUILD's sha512 (and the aports files against their git blob ids); per Debian
+  package the .dsc, upstream tarball(s) and Debian tarball from snapshot.debian.org, checked
+  against the snapshot's sha1 and the .dsc's sha256. Its first entry, MANIFEST, lists package,
+  version, licence, commit or source reference, the images containing it, and every file with
+  its sha512. The largest parts are the OpenJDK sources (112 MB and 86 MB), gcc-8 (84 MB) and
+  glibc (17 MB). scripts/build-spinnaker-sources.py rebuilds it from packages.tsv (a second
+  build from the same downloads gave a byte-identical tar); the tar holds the source as
+  published, not Alpine's or Debian's binary packages. The Go binaries and Python packages
+  listed above are not in it.
 
 These images are from 2021 and receive no updates: the JVM, the libraries and OpenSSL 1.1.1
 in them are unmaintained and should be assumed to have known vulnerabilities. They exist to

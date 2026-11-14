@@ -33,6 +33,7 @@ def entry(r: dict, pin: sa.Pin, a: argparse.Namespace, now: str) -> list[str]:
         f"    pinned: {q(r['reference'] + '@' + r['digest'])}",
         f"    config_digest: {q(pin.config_digest)}",
         "    platform: linux/amd64",
+        f"    mode: {pin.mode}",
         f"    origin: {q(pin.origin)}",
         f"    original_reference: {q(pin.original)}",
         f"    archive_sha256: {q(pin.archive_sha256)}",

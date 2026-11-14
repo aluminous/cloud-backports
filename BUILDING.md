@@ -114,31 +114,73 @@ checkout under a path the Podman machine shares (`/Users` by default).
 ## Spinnaker 1.25.4 archive (publishing)
 
 This is not a build: the images are upstream's, saved earlier, and are pushed as they are.
-Requirements: `python3` (3.11+, standard library only), the five archive files named in
+Five of them (clouddriver, front50, gate, orca, rosco) exist only as the archive files named in
 [`images/spinnaker/1.25.4/inputs.env`](images/spinnaker/1.25.4/inputs.env) (the old test
-harness's bundle cache, `.tools/bundle-cache/<id>/images/`; read in place, never modified), a
-registry login, about 3.1 GB of upload. No container engine is needed.
+harness's bundle cache, `.tools/bundle-cache/<id>/images/`; read in place, never modified).
+The sixth, echo 2.15.0-20201009170017, is copied from `gcr.io/spinnaker-marketplace/echo` by
+digest. Alongside the images a **source bundle** with the corresponding source of the
+GPL/LGPL-licensed packages is released.
 
-```bash
-export ARCHIVES=/path/to/bundle-cache/<id>/images
-scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --convert-only    # checks everything, contacts nothing
-scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --result out/push.json
-scripts/verify-spinnaker.py --blobs                                   # from the registry, against the pins
-scripts/write-published-spinnaker.py --result out/push.json           # published.yaml
-```
+### Checklist: publish without a personal token
 
-Credentials, never on the command line: for ghcr.io a personal access token (classic) of the
+The route needs no personal access token: the archives and the source bundle are uploaded once
+as assets of a GitHub release, and a workflow downloads them and pushes with the job's own
+`GITHUB_TOKEN` (`packages: write`).
+
+1. Merge the branch to the default branch (the tag created in step 5 points at its head and
+   the workflow file is read from the tagged commit).
+2. On the machine that holds the archives, build the source bundle (needs the network; about
+   an hour or more, mostly waiting for the mirrors; downloads are cached and resumable; the result is pinned):
+   `scripts/build-spinnaker-sources.py --out out/spinnaker-1.25.4-sources.tar` and check that it prints no
+   `MISSING` line and the sha256 in `inputs.env` (`SOURCES_BUNDLE_SHA256`).
+3. Check everything against the pins, without touching GitHub:
+   `scripts/create-spinnaker-release.sh --archive-dir "$ARCHIVES" --sources-tar out/spinnaker-1.25.4-sources.tar`
+   (prints what it would upload).
+4. Create the draft release and upload the six files (about 3.7 GB; each is under the
+   2 GiB asset limit, clouddriver is 1.6 GB): the same command with `--run`, with `gh` logged in
+   as a user who may create releases (`gh auth login`).
+5. In the GitHub UI, look at the draft's assets, then **publish** the release. Publishing creates
+   the tag `spinnaker-1.25.4`, which starts `.github/workflows/spinnaker-archive.yml`. (A run can
+   also be started by hand with `workflow_dispatch`, giving the release tag; the release must be
+   published, because `gh release download` finds a release by tag only once it is published.)
+6. The workflow downloads the assets, checks the source bundle and the archives against the
+   pins, pushes the five archive images and copies echo, runs
+   `scripts/verify-spinnaker.py --blobs` (every manifest, config and layer byte against the
+   pins), writes `published.yaml` and attaches it to the release. Watch the run; a mismatch
+   fails it before anything is pushed (the manifest digest is checked before upload).
+7. **In the GitHub UI, after the first push:** open each new package (your profile, Packages:
+   `spinnaker-clouddriver`, `-front50`, `-gate`, `-orca`, `-rosco`, `-echo`), Package settings,
+   Change visibility, **Public**. Packages pushed by a workflow in a public repository may still
+   start private; until they are public, anonymous pulls fail. Also check that each package
+   shows the repository as its source (the manifests carry the
+   `org.opencontainers.image.source` annotation; if a package is not linked, use "Connect
+   repository" in its settings).
+8. Check from a machine without credentials:
+   `scripts/verify-spinnaker.py --blobs`, and
+   `podman pull --platform linux/amd64 ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest from published.yaml>`.
+
+**Alternative, manual route** (needs a personal token): a classic personal access token of the
 publishing user with the `write:packages` scope (and `read:packages` to verify a private
 package), passed as `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` (or `REGISTRY_TOKEN`) in the
 environment, or as a docker-style auth file (`docker login ghcr.io`, or `--auth-file`,
-`REGISTRY_AUTH_FILE`; credential helpers are not supported, only the `auth` entry). The target
-namespace is `IMAGE_NAMESPACE` in `registry.env`, or `--namespace`. The first push creates
-the packages **private**; making them public, and linking them to this repository, is done in
-the GitHub package settings (the manifests carry the `org.opencontainers.image.source`
-annotation that GitHub uses to link a package to a repository; not tested against ghcr.io).
+`REGISTRY_AUTH_FILE`; credential helpers are not supported, only the `auth` entry). Never on
+the command line. Then, on the archive machine:
 
-What `push-spinnaker.py` does for each image, one at a time: checks the archive file's sha256,
-the config digest (the image ID) and the layer count against the pins; hashes every layer and
+```bash
+export ARCHIVES=/path/to/bundle-cache/<id>/images
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --convert-only    # checks everything, contacts no registry
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --result out/push.json
+scripts/verify-spinnaker.py --blobs
+scripts/write-published-spinnaker.py --result out/push.json           # published.yaml
+```
+
+The target namespace is `IMAGE_NAMESPACE` in `registry.env` (the workflow also honours the
+repository variable of that name), or `--namespace`.
+
+### How the images are pushed
+
+For each archive image, one at a time, `push-spinnaker.py` checks the archive file's sha256, the
+config digest (the image ID) and the layer count against the pins; hashes every layer and
 compares it with its `diff_id`; builds the OCI manifest and compares its digest with the pin
 (a mismatch aborts before any upload); uploads the layers, the config and then the manifest
 (chunked, skipping blobs the repository already has); and checks that the registry reports the
@@ -149,26 +191,81 @@ the archive. Compressing the layers (gzip) was tried first and rejected: the sam
 level gave different bytes with classic zlib 1.2.12 (macOS) and zlib-ng 1.3.1 (Fedora's
 Python 3.14), so a manifest digest could not be pinned across machines. The same manifest
 digests came out of `--convert-only` on macOS (Python 3.15) and in the Podman machine
-(Python 3.14). The cost is size: 3.1 GB stored and transferred instead of about half. Whether
-ghcr.io, Docker Engine and old container runtimes accept uncompressed OCI layers was tested
-only with a `registry:2` registry and Podman 6.1.
+(Python 3.14). The cost is size, measured on the layer tars of the five archives (bytes):
+
+| | uncompressed | gzip -6 | gzip -9 | zstd -3 | zstd -19 |
+|---|---:|---:|---:|---:|---:|
+| clouddriver | 1,598,008,320 | 828,719,135 | 826,592,735 | 789,077,151 | 711,558,335 |
+| front50 | 313,355,264 | 175,300,578 | 174,917,294 | 165,320,050 | 151,060,155 |
+| gate | 297,390,592 | 162,390,783 | 162,012,032 | 154,071,900 | 138,856,366 |
+| orca | 323,401,728 | 184,668,365 | 184,283,559 | 175,971,236 | 159,476,797 |
+| rosco | 568,941,056 | 223,521,210 | 222,380,035 | 206,171,732 | 177,019,996 |
+| **total** | **3,101,096,960** | **1,574,600,071 (50.8%)** | **1,570,185,655 (50.6%)** | **1,490,612,069 (48.1%)** | **1,337,971,649 (43.1%)** |
+
+(`scripts/measure-spinnaker-compression.py`; gzip with Python's zlib 1.2.12, zstd with Python
+3.15's `compression.zstd` and 4 threads; the tar framing of the archives is not counted.) Whether
+ghcr.io, Docker Engine and old container runtimes accept uncompressed OCI layers was tested only
+with a `registry:2` registry and Podman 6.1.
+
+Echo is copied differently: `push-spinnaker.py` reads its manifest from `gcr.io` by the pinned
+digest, checks that the bytes hash to that digest, downloads the config and every layer (each
+hashed on the way), uploads them and puts the manifest byte for byte, so the copy has upstream's
+own manifest digest (`sha256:6765ce1c…bdcd`), verifiable against gcr.io while it lasts. Its
+layers stay gzip, as upstream serves them. `verify-spinnaker.py --blobs` gunzips each echo
+layer and compares it with the config's `diff_id`.
+
+The workflow (`.github/workflows/spinnaker-archive.yml`) runs only on the tag or by hand, never
+for a pull request; permissions are `contents: write` (read assets, attach `published.yaml`)
+and `packages: write`; its only third-party actions are `actions/checkout` and
+`actions/upload-artifact`, pinned by SHA. The archives are read in place from the runner's
+temporary directory (about 3.1 GB, plus the source bundle) and each blob is streamed to the
+registry from the archive; echo's layers are spooled to a temporary file one at a time (largest
+197 MB). It does not attest provenance: the images are not built in CI, and the pins are the
+record.
 
 ### Dry run against a local registry
 
 ```bash
-podman run -d --name backports-dryrun-registry -p 127.0.0.1:62924:5000 -v /var/lib/registry docker.io/library/registry:2
-scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --namespace 127.0.0.1:62924/cloud-backports --insecure
-scripts/verify-spinnaker.py --namespace 127.0.0.1:62924/cloud-backports --insecure --blobs
-podman pull --tls-verify=false --platform linux/amd64 127.0.0.1:62924/cloud-backports/spinnaker-gate@sha256:<manifest digest>
+podman run -d --name backports-dryrun-registry -p 127.0.0.1:62925:5000 -v /var/lib/registry docker.io/library/registry:2
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --namespace 127.0.0.1:62925/cloud-backports --insecure
+scripts/verify-spinnaker.py --namespace 127.0.0.1:62925/cloud-backports --insecure --blobs
+podman pull --tls-verify=false --platform linux/amd64 127.0.0.1:62925/cloud-backports/spinnaker-gate@sha256:<manifest digest>
 podman image inspect --format '{{.Id}}' <that reference>      # the pinned image ID
 podman rm -f -v backports-dryrun-registry
 ```
 
-Measured on 2026-11-14 (Apple Silicon, Podman 6.1.4, registry on loopback): all five images
-pushed one after another in 17 s (clouddriver 10 s) into an empty repository path, and again
-in 19 s into a second path with the same digests; `verify-spinnaker.py --blobs` took 8 s; the
-pulled gate image reported the pinned image ID `7c2e8142…5c00` and manifest digest
-`a4f9ebe8…e5da`. Over the internet the time is the upload of 3.1 GB.
+Measured on 2026-11-14 (Apple Silicon, Podman 6.1.4, registry on loopback): all six images
+(five from the archives, echo copied from gcr.io) pushed in 56 s into an empty repository path
+(clouddriver 10 s, echo 36 s of downloading 426 MB), and again in 54 s into a second path with
+the same digests; `verify-spinnaker.py --blobs` took 7.5 s; the pulled gate image reported the
+pinned image ID `7c2e8142…5c00` and manifest digest `a4f9ebe8…e5da`, the pulled echo image the
+pinned image ID `c6ca278c…0758` and upstream's manifest digest `6765ce1c…bdcd`. Over the
+internet the time is the upload of 3.1 GB.
+
+The workflow's steps were also run locally: every `run:` step of `spinnaker-archive.yml`, in
+order, with the same scripts, against the local registry, with a directory of symlinks to the
+archives and the source bundle standing in for the release assets and a stub `gh` that copies
+files (download) and records the upload of `published.yaml`. All passed. Not exercised
+locally, because they need GitHub: the two actions, `gh release download`/`upload` against a
+real release, the `GITHUB_TOKEN` permissions, and ghcr.io itself (authentication by token,
+acceptance of uncompressed OCI layers and of the docker-format config, package visibility).
+
+### Source bundle
+
+`scripts/build-spinnaker-sources.py` builds `spinnaker-1.25.4-sources.tar` from
+[`images/spinnaker/1.25.4/packages.tsv`](images/spinnaker/1.25.4/packages.tsv), which
+`scripts/inventory-spinnaker.py ARCHIVE... --packages-tsv` writes from the package databases of
+the images (echo's archive is the old harness's copy of the image whose config digest is pinned).
+Result of the run on 2026-11-14: 119 source packages (37 Alpine, 82 Debian), 511 files,
+620,062,720 bytes, sha256 `b4b8e62a…344a`, nothing missing; a second build from the cached
+downloads was byte-identical. Alpine files come from the aports repository at the recorded
+commits (gitlab.alpinelinux.org API) and `distfiles.alpinelinux.org` or the upstream URL of the
+APKBUILD, every source checked against the APKBUILD's sha512; Debian files come from
+snapshot.debian.org, checked against its sha1 and the .dsc's sha256 (one component tarball of
+perl, `perl_5.28.1.orig-regen-configure.tar.xz`, is stored in the snapshot under the name
+`perl_5.28.0~rc1.orig-regen-configure.tar.xz`; the sha256 is the .dsc's). The bundle's own sha256
+is pinned in `inputs.env`; it depends on the upstream files staying as they are, which the
+per-file checksums enforce.
 
 ### Upstream check
 
@@ -182,19 +279,21 @@ GET https://us-docker.pkg.dev/v2/spinnaker-community/docker/<service>/manifests/
 GET https://gcr.io/v2/spinnaker-marketplace/<service>/manifests/<tag>                   -> 404 MANIFEST_UNKNOWN (same five)
 GET https://us-docker.pkg.dev/v2/spinnaker-community/docker/<service>/tags/list         -> 200 (clouddriver, front50, gate, orca, rosco, echo)
 GET https://gcr.io/v2/spinnaker-marketplace/<service>/tags/list                         -> 200
+GET https://gcr.io/v2/spinnaker-marketplace/echo/manifests/2.15.0-20201009170017        -> 200
+    (Accept: application/vnd.docker.distribution.manifest.v2+json)
 ```
 
 The `us-docker` tag lists contain none of the five tags and no 1.25.x tag (420 clouddriver,
 278 front50, 359 gate, 356 orca and 285 rosco tags, of the 2025.0 and `spinnaker-1.37`/`1.38`
-generations). The old harness recorded only tags and the archives'
-file hashes, not registry digests, so there is no digest to try: pulling by digest could not be
-checked. Conclusion: upstream does not serve these images, the local archives are the only
-source, and a CI workflow that copies registry to registry is not possible for them (so there
-is no `spinnaker-archive.yml`).
+generations). The old harness recorded only tags and the archives' file hashes, not registry
+digests, so there is no digest to try: pulling by digest could not be checked. Conclusion:
+upstream does not serve the five, so the local archives are their only source and CI cannot
+copy them registry to registry; the workflow therefore downloads them from a release.
 
-One exception found: `gcr.io/spinnaker-marketplace/echo:2.15.0-20201009170017` still resolves
-(`GET .../manifests/2.15.0-20201009170017` -> 200, manifest `sha256:6765ce1c…bdcd`, config
-`sha256:c6ca278c…0758`, 10 layers). The old harness's real-Spinnaker run used that image, not
-the release's echo (2.16.0-20210208200018, which is 404 at both registries). A local archive
-of it exists outside the harness directories (`mockyard/pocs/golden/out/images/`, 760 MB) and has
-the same config digest, so it is the same image; it is not part of the 1.25.4 pins.
+Echo is the exception: `gcr.io/spinnaker-marketplace/echo:2.15.0-20201009170017` still
+resolves (manifest `sha256:6765ce1c…bdcd`, config `sha256:c6ca278c…0758`, 10 gzip layers,
+426,599,241 bytes), and is copied from there. It is the echo that the old harness's
+real-Spinnaker run used, **not** release 1.25.4's echo (2.16.0-20210208200018, 404 at both
+registries). A local archive of it exists outside the harness directories
+(`mockyard/pocs/golden/out/images/echo-2.15.0-20201009170017.tar`, 760 MB, the image whose
+config digest equals upstream's); it was only read, to list its packages for the source bundle.

@@ -19,9 +19,11 @@ import json
 import os
 import re
 import tarfile
+import tempfile
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Iterator
 
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = "1.25.4"
@@ -62,14 +64,19 @@ class Pin:
     def __init__(self, env: dict[str, str], service: str) -> None:
         p = service.upper().replace("-", "_") + "_"
         self.service = service
+        # "archive": rebuilt as an OCI manifest from a local docker-archive, layers uncompressed;
+        # "copy": copied from another registry by digest, manifest bytes unchanged.
+        self.mode = env.get(p + "MODE", "archive")
         self.version = env[p + "VERSION"]
         self.original = env[p + "ORIGINAL_REFERENCE"]
-        self.archive = env[p + "ARCHIVE"]
-        self.archive_sha256 = env[p + "ARCHIVE_SHA256"]
         self.config_digest = env[p + "CONFIG_DIGEST"]
         self.layers = int(env[p + "LAYERS"])
         self.manifest_digest = env[p + "MANIFEST_DIGEST"]
         self.origin = env[p + "ORIGIN"]
+        self.archive = env.get(p + "ARCHIVE", "")
+        self.archive_sha256 = env.get(p + "ARCHIVE_SHA256", "")
+        if self.mode == "archive" and not (self.archive and self.archive_sha256):
+            raise Error(f"{service}: pins lack ARCHIVE / ARCHIVE_SHA256")
         self.repo_name = "spinnaker-" + service  # <namespace>/<repo_name>:<version>
 
     def reference(self, namespace: str) -> str:
@@ -285,44 +292,54 @@ class Registry:
         self.tokens[scope] = doc.get("token") or doc.get("access_token")
 
     def request(self, method: str, path: str, repo: str, actions: str, body=None,
-                headers: dict[str, str] | None = None, length: int | None = None):
-        """One request with auth retry. `path` is absolute (/v2/...) or a full URL.
-        Returns (status, response headers, body bytes)."""
+                headers: dict[str, str] | None = None, length: int | None = None,
+                stream: bool = False):
+        """One request with auth retry and redirects (credentials are not sent to another
+        host). `path` is absolute (/v2/...) or a full URL. Returns (status, response headers,
+        body bytes); with stream=True the third item is an open response to read from
+        (call .close() on it when done)."""
         scope = f"repository:{repo}:{actions}"
-        for attempt in range(3):
-            h = {"User-Agent": "cloud-backports-spinnaker/1", **self._auth_header(scope),
-                 **(headers or {})}
+        retried = False
+        origin = self.host
+        for _ in range(8):
+            url = urllib.parse.urlsplit(path)
+            same = not url.netloc or url.netloc == origin
+            h = {"User-Agent": "cloud-backports-spinnaker/1",
+                 **(self._auth_header(scope) if same else {}), **(headers or {})}
             if length is not None:
                 h["Content-Length"] = str(length)
-            url = urllib.parse.urlsplit(path)
             conn = self._conn(url.netloc or None, (url.scheme == "https") if url.scheme else None)
-            try:
-                target = url.path + (("?" + url.query) if url.query else "")
-                if hasattr(body, "read") and length is not None:
-                    conn.putrequest(method, target)
-                    for k, v in h.items():
-                        conn.putheader(k, v)
-                    conn.endheaders()
-                    while block := body.read(BLOCK):
-                        conn.send(block)
-                else:
-                    conn.request(method, target, body=body, headers=h)
-                resp = conn.getresponse()
-                data = resp.read()
-                hdrs = {k.lower(): v for k, v in resp.getheaders()}
-            finally:
-                conn.close()
-            if resp.status == 401 and attempt < 2:
+            target = url.path + (("?" + url.query) if url.query else "")
+            if hasattr(body, "read") and length is not None:
+                conn.putrequest(method, target)
+                for k, v in h.items():
+                    conn.putheader(k, v)
+                conn.endheaders()
+                while block := body.read(BLOCK):
+                    conn.send(block)
+            else:
+                conn.request(method, target, body=body, headers=h)
+            resp = conn.getresponse()
+            hdrs = {k.lower(): v for k, v in resp.getheaders()}
+            redirect = resp.status in (301, 302, 303, 307, 308) and "location" in hdrs
+            if stream and resp.status == 200:
+                resp._conn = conn  # closed with the response
+                return resp.status, hdrs, resp
+            data = resp.read()
+            conn.close()
+            if resp.status == 401 and not retried and same:
+                retried = True
                 if hasattr(body, "seek"):
                     body.seek(0)
                 self._challenge(hdrs.get("www-authenticate", ""), scope)
                 continue
-            if resp.status in (301, 302, 307, 308) and "location" in hdrs:
-                path = urllib.parse.urljoin(f"https://{self.host}{path}", hdrs["location"]) \
-                    if not path.startswith("http") else urllib.parse.urljoin(path, hdrs["location"])
+            if redirect:
+                base = path if path.startswith("http") else \
+                    f"{'http' if self.insecure else 'https'}://{self.host}{path}"
+                path = urllib.parse.urljoin(base, hdrs["location"])
                 continue
             return resp.status, hdrs, data
-        raise Error(f"{self.host}: authentication failed for {method} {path}")
+        raise Error(f"{self.host}: authentication or redirects failed for {method} {path}")
 
     # -- blobs
     def blob_exists(self, repo: str, digest: str) -> bool:
@@ -334,6 +351,18 @@ class Registry:
         if s != 200:
             raise Error(f"GET blob {digest} from {repo}: HTTP {s}")
         return data
+
+    def stream_blob(self, repo: str, digest: str) -> Iterator[bytes]:
+        """The blob's bytes in chunks (follows redirects)."""
+        s, _, resp = self.request("GET", f"/v2/{repo}/blobs/{digest}", repo, "pull", stream=True)
+        if s != 200:
+            raise Error(f"GET blob {digest} from {repo}: HTTP {s}")
+        try:
+            while block := resp.read(BLOCK):
+                yield block
+        finally:
+            resp.close()
+            resp._conn.close()
 
     def upload_blob(self, repo: str, digest: str, size: int, source) -> str:
         """Upload one blob (chunked) unless the repository already has it.
@@ -387,3 +416,56 @@ class Registry:
             raise Error(f"GET manifest {repo}:{ref}: HTTP {s}")
         return data, h.get("content-type", "")
 
+
+
+def copy_image(src: Registry, src_repo: str, dst: Registry, dst_repo: str, pin: Pin,
+               log=print) -> str:
+    """Copy one image by digest, manifest bytes unchanged (so the digest is the source's).
+    Every blob is hashed on the way and must have the digest the manifest names."""
+    s, h, data = src.request("GET", f"/v2/{src_repo}/manifests/{pin.manifest_digest}", src_repo,
+                             "pull", headers={"Accept": DOCKER_MANIFEST_TYPE})
+    if s != 200:
+        raise Error(f"{pin.service}: GET manifest {pin.manifest_digest} from {src.host}: HTTP {s}")
+    if digest_of(data) != pin.manifest_digest:
+        raise Error(f"{pin.service}: source manifest hashes to {digest_of(data)}, "
+                    f"pinned {pin.manifest_digest}")
+    m = json.loads(data)
+    if m["config"]["digest"] != pin.config_digest or len(m["layers"]) != pin.layers:
+        raise Error(f"{pin.service}: source manifest differs from the pinned config or layer count")
+    media = m["mediaType"]
+    for d in [m["config"]] + m["layers"]:
+        if dst.blob_exists(dst_repo, d["digest"]):
+            log(f"    blob {d['digest'][7:19]} {d['size']:>11} bytes exists")
+            continue
+        # the upload needs the blob as a file-like object of known size: spool to a temp file
+        with tempfile.TemporaryFile() as tmp:
+            hsh = hashlib.sha256()
+            for block in src.stream_blob(src_repo, d["digest"]):
+                hsh.update(block)
+                tmp.write(block)
+            if "sha256:" + hsh.hexdigest() != d["digest"] or tmp.tell() != d["size"]:
+                raise Error(f"{pin.service}: blob {d['digest']} downloaded as "
+                            f"sha256:{hsh.hexdigest()} ({tmp.tell()} bytes)")
+            tmp.seek(0)
+            state = dst.upload_blob(dst_repo, d["digest"], d["size"], lambda: _Keep(tmp))
+        log(f"    blob {d['digest'][7:19]} {d['size']:>11} bytes {state}")
+    got = dst.put_manifest(dst_repo, pin.version, data, media)
+    if got != pin.manifest_digest:
+        raise Error(f"{pin.service}: registry reports manifest {got}, pinned {pin.manifest_digest}")
+    return got
+
+
+class _Keep:
+    """A file object that upload_blob can use in a `with` without closing the underlying file."""
+
+    def __init__(self, f) -> None:
+        self.f = f
+
+    def read(self, n: int = -1) -> bytes:
+        return self.f.read(n)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a) -> None:
+        return None

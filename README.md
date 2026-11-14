@@ -8,8 +8,9 @@ longer publishes, kept runnable for testing against platforms that still run the
   Apple Silicon and arm64 CI. Each is published under one multi-arch tag: arm64 is built here,
   amd64 is upstream's official image carried over by digest (not rebuilt).
 - **Archives (prepared, not published):** upstream images that have disappeared from their
-  registries, preserved unmodified: the five Spinnaker 1.25.4 service images
-  (`spinnaker-<service>`, linux/amd64). See [Spinnaker 1.25.4 archive](#spinnaker-1254-archive).
+  registries, preserved unmodified: five Spinnaker 1.25.4 service images and the echo that
+  the old capture run used (`spinnaker-<service>`, linux/amd64), with the source of their
+  GPL/LGPL packages. See [Spinnaker 1.25.4 archive](#spinnaker-1254-archive).
 
 **What this is:** reproducible rebuilds of unmodified upstream release source, verified
 against pinned hashes, with the upstream licences inside the image.
@@ -46,8 +47,8 @@ GitHub release.
 
 ## Spinnaker 1.25.4 archive
 
-Prepared, **not published**: nothing has been pushed anywhere, and nothing is published until
-the owner decides (see [ROADMAP.md](ROADMAP.md) for the open decisions). The images are
+Prepared for a public release, **not published**: nothing has been pushed anywhere (the steps
+are the checklist in [BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing)). The images are
 upstream's own, saved from `us-docker.pkg.dev/spinnaker-community/docker/` before the tags
 were removed (on 2026-11-14 they no longer resolve there or at `gcr.io/spinnaker-marketplace`,
 [BUILDING.md](BUILDING.md#upstream-check)). Nothing is rebuilt or modified: each image keeps
@@ -65,22 +66,36 @@ linux/amd64, `docker-archive` format source, Alpine Linux base, Alpine's OpenJDK
 The full values (file sha256, image ID, manifest digest) are pinned in
 [`images/spinnaker/1.25.4/inputs.env`](images/spinnaker/1.25.4/inputs.env); the licence and
 source facts are in [`images/spinnaker/1.25.4/NOTICE`](images/spinnaker/1.25.4/NOTICE). Not
-included, because they are not in the local archives: echo, deck, fiat, igor, kayenta and
-the monitoring services of release 1.25.4 (the old harness's real-Spinnaker run also used
-echo `2.15.0-20201009170017`, which is not the release's echo and is still served by
-`gcr.io/spinnaker-marketplace`; see [BUILDING.md](BUILDING.md#upstream-check)).
+included, because they are not in the local archives: deck, fiat, igor, kayenta and the
+monitoring services of release 1.25.4, and the release's own echo (2.16.0-20210208200018, which
+no registry serves).
 
-The pushed manifest is an OCI manifest over the original, uncompressed layers, so its digest
-depends on nothing but the archive and is pinned too. Once published, pin by digest as for
+**Echo is not the release's echo.** `spinnaker-echo:2.15.0-20201009170017` is the echo that
+the old real-Spinnaker capture run used (not the one named by the 1.25.4 bill of materials).
+Upstream still serves it at `gcr.io/spinnaker-marketplace/echo`, so it is copied from there by
+digest with upstream's manifest byte for byte (manifest `sha256:6765ce1cdaf16733cf61550d0f7067fb6bc2830e56c6decd90f6499a7f19bdcd`,
+image ID `sha256:c6ca278c9cc43aa76775110707d75c032261227ecb11f844d6659e0d0a490758`; Debian 10.6
+based, gzip layers), so its digest can be checked against gcr.io while it lasts.
+
+**Source bundle.** The images contain GPL and LGPL packages (Alpine's busybox, bash, OpenJDK
+with the Classpath exception; Debian's glibc, gcc, coreutils and more in echo). The
+corresponding source of every package whose licence field names the GPL or LGPL, 119 source
+packages, is released as `spinnaker-1.25.4-sources.tar` (620 MB, sha256 pinned in `inputs.env`)
+next to the images: [`images/spinnaker/1.25.4/NOTICE`](images/spinnaker/1.25.4/NOTICE) says
+what is in it and how it was checked.
+
+For the five archive images the pushed manifest is an OCI manifest over the original,
+uncompressed layers, so its digest depends on nothing but the archive and is pinned too. Once published, pin by digest as for
 istio-pilot (`ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest>` from
 `published.yaml`); to check a published copy against the pins:
 
 ```bash
 scripts/verify-spinnaker.py                    # manifest, config and diff_ids from the registry
-scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.1 GB)
+scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.5 GB)
 ```
 
-Publishing needs the local archives: [BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing).
+The five archives are uploaded once as assets of a GitHub release and a workflow
+(`.github/workflows/spinnaker-archive.yml`) pushes them with the job's own token.
 These are 2021 images with unmaintained components; use them for tests only.
 
 ## Pull
@@ -161,11 +176,16 @@ scripts/
   verify-spinnaker.py                check pushed Spinnaker images against the pins (registry API)
   write-published-spinnaker.py       add the Spinnaker images to published.yaml
   inventory-spinnaker.py             read facts (config, OS, JVM, packages) out of the archives
-  spinnaker_archive.py               shared code: archive reader, registry client
+  spinnaker_archive.py               shared code: archive reader, registry client, copy by digest
+  build-spinnaker-sources.py         build the source bundle of the GPL/LGPL packages
+  create-spinnaker-release.sh        check the files against the pins, create the draft release
+  measure-spinnaker-compression.py   what gzip/zstd would save on the layers
   module_tar.py                      save the Go module set as a deterministic tar
 images/spinnaker/1.25.4/
   inputs.env                         pins: archive sha256, image ID, manifest digest per service
+  packages.tsv                       every apk/dpkg package of the six images, licence class
   NOTICE                             provenance, licence and source facts
+.github/workflows/spinnaker-archive.yml  CI: download release assets, push, copy echo, verify, record
 .github/workflows/istio-pilot.yml    CI: build on arm64, verify, push, index, attest, record
 ```
 
@@ -177,6 +197,13 @@ runs the verification, and only on a tag `istio-pilot-1.10.6*` or a manual run p
 attaches `published.yaml`, the digests of what was published, to the release. Pull
 requests build and verify but never push. Token permissions are per job and minimal;
 actions are pinned by commit SHA.
+
+`.github/workflows/spinnaker-archive.yml` runs only on a tag `spinnaker-1.25.4*` or by hand
+(never for a pull request): it downloads the archives and the source bundle from the
+release, checks them against the pins, pushes the images to GHCR with the job's own
+`GITHUB_TOKEN`, copies echo from gcr.io by digest, verifies every layer against the pins and
+attaches `published.yaml` to the release. Linted with actionlint; its steps were run locally
+against a local registry, the workflow itself has not run on GitHub.
 
 ## Licences
 

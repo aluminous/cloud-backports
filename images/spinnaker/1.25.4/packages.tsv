@@ -1,0 +1,292 @@
+#kind	name	version	origin	license	class	aports_commit	dist	images
+apk	.python-rundeps	20210312.210011			permissive		v3.12	clouddriver
+apk	alpine-baselayout	3.2.0-r3	alpine-baselayout	GPL-2.0-only	gpl	55464083de768e34737154e10544bb0be12bcf04	v3.11	front50,gate,orca
+apk	alpine-baselayout	3.2.0-r7	alpine-baselayout	GPL-2.0-only	gpl	c3ce4065bd8a69d20ad392d4cf006ed652c3f1a7	v3.12	clouddriver,rosco
+apk	alpine-keys	2.1-r2	alpine-keys	MIT	permissive	bdc861e495d33e961b7b9884324bea64a16d2b91	v3.11	front50,gate,orca
+apk	alpine-keys	2.2-r0	alpine-keys	MIT	permissive	a8372f3ce6e7a3f4cf28524aa729b334eb9d2fd6	v3.12	clouddriver,rosco
+apk	alsa-lib	1.2.1.2-r0	alsa-lib	LGPL-2.1-or-later	gpl	fd11c8760cdfc11279662124dbcc43009024f6a6	v3.11	front50,gate,orca
+apk	alsa-lib	1.2.2-r0	alsa-lib	LGPL-2.1-or-later	gpl	8ed5c321934bc4f329c0d6782b90125b468c0287	v3.12	clouddriver,rosco
+apk	apk-tools	2.10.5-r0	apk-tools	GPL2	gpl	069a7f047dd996c5b0e330ad776b0a354664ab4a	v3.11	front50,gate,orca
+apk	apk-tools	2.10.5-r1	apk-tools	GPL-2.0-only	gpl	6fb6e4266ba2a4c451d2c31c55eaf5b2d1642f8b	v3.12	clouddriver,rosco
+apk	bash	5.0.11-r1	bash	GPL-3.0-or-later	gpl	db415e44798fbd6a6d36caaadf52524c2c63c1f7	v3.11	front50,gate,orca
+apk	bash	5.0.17-r0	bash	GPL-3.0-or-later	gpl	b8865099571493587168a21464ff667150448089	v3.12	clouddriver,rosco
+apk	brotli-libs	1.0.9-r1	brotli	MIT	permissive	35e7793b77c5e2c8eaa5ae0e5250f5e0f5703972	v3.12	clouddriver,rosco
+apk	busybox	1.31.1-r19	busybox	GPL-2.0-only	gpl	b8f92cf12ab6e48d1c3a7a0e590521581443e720	v3.12	clouddriver,rosco
+apk	busybox	1.31.1-r9	busybox	GPL-2.0-only	gpl	e5c984f68aabb28de623a7e3ada5a223c2b66d77	v3.11	front50,gate,orca
+apk	ca-certificates	20191127-r2	ca-certificates	MPL-2.0 GPL-2.0-or-later	gpl	b45d3b45cc45c589af160cb29c6a5b3a0c35c231	v3.11	front50,gate,orca
+apk	ca-certificates	20191127-r4	ca-certificates	MPL-2.0 GPL-2.0-or-later	gpl	1ba6784c56398723ecee9aa3f6f52af6d8681eee	v3.12	clouddriver,rosco
+apk	ca-certificates-bundle	20191127-r4	ca-certificates	MPL-2.0 GPL-2.0-or-later	gpl	1ba6784c56398723ecee9aa3f6f52af6d8681eee	v3.12	clouddriver,rosco
+apk	ca-certificates-cacert	20191127-r2	ca-certificates	MPL-2.0 GPL-2.0-or-later	gpl	b45d3b45cc45c589af160cb29c6a5b3a0c35c231	v3.11	front50,gate,orca
+apk	curl	7.69.1-r3	curl	MIT	permissive	90e58b3d833e1a1e51c524cdaa5091dbcd80c0f0	v3.12	rosco
+apk	expat	2.2.9-r1	expat	MIT	permissive	1eb911922a7e818a6f314a68c0561bba008e6efd	v3.12	clouddriver,rosco
+apk	freetype	2.10.1-r1	freetype	FTL GPL-2.0-or-later	gpl	458b4f59cadb84f776781c90f4cb1b0268061c30	v3.11	front50,gate,orca
+apk	freetype	2.10.4-r0	freetype	FTL GPL-2.0-or-later	gpl	d527b311170c90d94e8b605d2bb98177c8b9cff5	v3.12	clouddriver,rosco
+apk	gdbm	1.13-r1	gdbm	GPL	gpl	730cdcef6901750f4029d4c3b8639ce02ee3ead1	v3.12	clouddriver
+apk	giflib	5.2.1-r0	giflib	MIT	permissive	08824c6305acc2bac05566a86a554060495b5c5d	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	git	2.26.2-r0	git	GPL-2.0-or-later	gpl	e964b427700d05033702d989be968bdd17d391ad	v3.12	rosco
+apk	git	2.26.3-r0	git	GPL-2.0-or-later	gpl	8834ac5fa1de39fb8a9b163d8dc3f0b80429078d	v3.12	clouddriver
+apk	java-cacerts	1.0-r0	java-cacerts	MIT	permissive	aa83dfc0126cd7fa84c5262a0a78d71211f14026	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	java-common	0.2-r0	java-common	GPL-2.0	gpl	33c5fb54d728be0c5a3afa3ee4a014a76488360d	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	keyutils-libs	1.6.1-r1	keyutils	GPL-2.0-or-later LGPL-2.0-or-later	gpl	da84f5d70fa9f23955ad9d52a11f3d8a9875858c	v3.12	clouddriver
+apk	krb5-conf	1.0-r2	krb5-conf	MIT	permissive	4a46b2cb955e25fd6d6f913794d35bc6d876aea9	v3.12	clouddriver
+apk	krb5-libs	1.18.3-r0	krb5	MIT	permissive	c6d973bfdf1e1ba106b7f077ed0e439145c293b0	v3.12	clouddriver
+apk	lcms2	2.9-r1	lcms2	MIT	permissive	348c14c7421c7d8fcdc82fd7014fb75eed11f56f	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	libbsd	0.10.0-r0	libbsd	BSD	permissive	1eb911922a7e818a6f314a68c0561bba008e6efd	v3.12	clouddriver,rosco
+apk	libbsd	0.10.0-r0	libbsd	BSD	permissive	fe9e411cae2853796377a45dd456d037cb35b67d	v3.11	front50,gate,orca
+apk	libbz2	1.0.8-r1	bzip2	bzip2-1.0.6	permissive	596cd15e692776222d49da2700c6041b39ffbea9	v3.12	clouddriver,rosco
+apk	libbz2	1.0.8-r1	bzip2	bzip2-1.0.6	permissive	fd67415c29d64b1c3617cdd524d75c9c800eb985	v3.11	front50,gate,orca
+apk	libc-utils	0.7.2-r0	libc-dev	BSD	permissive	97b1c2842faa3bfa30f5811ffbf16d5ff9f1a479	v3.11	front50,gate,orca
+apk	libc-utils	0.7.2-r3	libc-dev	BSD-2-Clause AND BSD-3-Clause	permissive	60424133be2e79bbfeff3d58147a22886f817ce2	v3.12	clouddriver,rosco
+apk	libcom_err	1.45.6-r0	e2fsprogs	GPL-2.0-or-later AND LGPL-2.0-or-later AND BSD-3-Clause AND MIT	gpl	bcdbc4836d9f1a039415aece6a58e9a2565b137b	v3.12	clouddriver
+apk	libcrypto1.1	1.1.1i-r0	openssl	OpenSSL	permissive	8448cfa102d16cb5528e64328465f86f8f72f6dd	v3.11	front50,gate,orca
+apk	libcrypto1.1	1.1.1i-r0	openssl	OpenSSL	permissive	9e04b0fdd0665f27ea5d557286eda64cc877322f	v3.12	rosco
+apk	libcrypto1.1	1.1.1j-r0	openssl	OpenSSL	permissive	6c15d993523a9a33f50facad987e46094f5a23f0	v3.12	clouddriver
+apk	libcurl	7.69.1-r3	curl	MIT	permissive	90e58b3d833e1a1e51c524cdaa5091dbcd80c0f0	v3.12	clouddriver,rosco
+apk	libedit	20191231.3.1-r0	libedit	BSD-3-Clause	permissive	d0a62fa9ebd3260e9d69dd1cc4d512681cfc6a7b	v3.12	clouddriver,rosco
+apk	libffi	3.2.1-r6	libffi	MIT	permissive	8f01b5fd00a19f1af3e267bfe1226160dfb8ba02	v3.11	front50,gate,orca
+apk	libffi	3.3-r2	libffi	MIT	permissive	aac194968015e50383144a04b526574a5e0c315d	v3.12	clouddriver,rosco
+apk	libidn2	2.3.0-r0	libidn2	GPL-2.0-or-later GPL-3.0-or-later LGPL-3.0-or-later	gpl	2ebe46f2884b4a53c6c6930ff05609ac3c693a39	v3.12	clouddriver,rosco
+apk	libintl	0.20.2-r0	gettext	LGPL-2.1-or-later	gpl	bcb3ce476101cf115f8e9309e838a788a9ee5c91	v3.12	clouddriver
+apk	libjpeg-turbo	2.0.4-r1	libjpeg-turbo	BSD-3-Clause IJG Zlib	permissive	b2f81f5a103f21ecd379b2247bcde8a8cb523c6a	v3.11	front50,gate,orca
+apk	libjpeg-turbo	2.0.5-r0	libjpeg-turbo	BSD-3-Clause IJG Zlib	permissive	69b8a8ef630f3cac8a0702f19e3d6f72b1c100a6	v3.12	clouddriver,rosco
+apk	libnsl	1.2.0-r1	libnsl	LGPL-2.0-or-later	gpl	77bad5ead56d454fb65d9c4b7b4241477ea874fc	v3.12	clouddriver
+apk	libpng	1.6.37-r1	libpng	Libpng	permissive	77d0c50131c172da4492dda6cc156bb0d907819f	v3.12	clouddriver,rosco
+apk	libpng	1.6.37-r1	libpng	Libpng	permissive	7944951d23e03c162d96dd71b01d72cb09f97030	v3.11	front50,gate,orca
+apk	libssl1.1	1.1.1i-r0	openssl	OpenSSL	permissive	8448cfa102d16cb5528e64328465f86f8f72f6dd	v3.11	front50,gate,orca
+apk	libssl1.1	1.1.1i-r0	openssl	OpenSSL	permissive	9e04b0fdd0665f27ea5d557286eda64cc877322f	v3.12	rosco
+apk	libssl1.1	1.1.1j-r0	openssl	OpenSSL	permissive	6c15d993523a9a33f50facad987e46094f5a23f0	v3.12	clouddriver
+apk	libtasn1	4.15.0-r0	libtasn1	GPL-3.0 LGPL	gpl	5e8701ef0a84fe9416cd489f5ac3d947263f0c0f	v3.11	front50,gate,orca
+apk	libtasn1	4.16.0-r1	libtasn1	LGPL-2.1-or-later	gpl	3d5ddd7c6786d6fde5130624812a0ba51b81543e	v3.12	clouddriver,rosco
+apk	libtirpc	1.2.6-r0	libtirpc	BSD-3-Clause	permissive	d669e9264f4a197f8eca73c2d6cdb9a63283e3a0	v3.12	clouddriver
+apk	libtirpc-conf	1.2.6-r0	libtirpc	BSD-3-Clause	permissive	d669e9264f4a197f8eca73c2d6cdb9a63283e3a0	v3.12	clouddriver
+apk	libtls-standalone	2.9.1-r0	libtls-standalone	ISC	permissive	981bf8f8fb3cbbc210ee4f2a2fb5b55d0132e02a	v3.11	front50,gate,orca
+apk	libtls-standalone	2.9.1-r1	libtls-standalone	ISC	permissive	7ebfa23b6119a24ca9b9375bdc55373259192da1	v3.12	clouddriver,rosco
+apk	libunistring	0.9.10-r0	libunistring	GPL-2.0+ OR LGPL-3.0+	gpl	1ed623639efb63333ac8e12365dff1ab5f0d66cb	v3.12	clouddriver,rosco
+apk	libuuid	2.35.2-r0	util-linux	GPL-2.0 GPL-2.0-or-later LGPL-2.0-or-later BSD Public-Domain	gpl	2f88ea0ee94a2ea7729142fca3e23352932e9f31	v3.12	clouddriver
+apk	libverto	0.3.1-r1	libverto	MIT	permissive	6cc7e22ba86ad319e1226404d676def447c7eef9	v3.12	clouddriver
+apk	libx11	1.6.12-r0	libx11	custom:XFREE86	permissive	b9e335a9e8fba2cf8dbb6faa8e01a189f2eb390a	v3.12	clouddriver,rosco
+apk	libx11	1.6.12-r0	libx11	custom:XFREE86	permissive	da4d6d28b6b2d51bbbbcc3020572fb74e4d51232	v3.11	front50,gate,orca
+apk	libxau	1.0.9-r0	libxau	MIT	permissive	bf94fe726e658c7944e10f2b38d14fa68ca642da	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	libxcb	1.13.1-r0	libxcb	MIT	permissive	657d4b269288839b9b091394da7bcebb8ee8fcef	v3.11	front50,gate,orca
+apk	libxcb	1.14-r1	libxcb	MIT	permissive	f2b867b573c3f54b1e8d0f7df718c8cd65cb3394	v3.12	clouddriver,rosco
+apk	libxdmcp	1.1.3-r0	libxdmcp	MIT	permissive	27cf05f3f054c20dc23398592e8c2d4feb79e7f2	v3.12	clouddriver,rosco
+apk	libxdmcp	1.1.3-r0	libxdmcp	MIT	permissive	ded5549521d0af04b69a88070b457cf090c7b563	v3.11	front50,gate,orca
+apk	libxext	1.3.4-r0	libxext	MIT	permissive	6070123eeaa51c59cc7f9ed0ca724b4ee1d1004f	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	libxi	1.7.10-r0	libxi	MIT AND X11	permissive	ba3bfac83884468db3f3900ac8be88b626fbc9fb	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	libxrender	0.9.10-r3	libxrender	custom	permissive	63d6d77cb519d79e4647e592d68d9ce1dcb11036	v3.12	clouddriver,rosco
+apk	libxrender	0.9.10-r3	libxrender	custom	permissive	d2bfb22c8e8f67ad7d8d02704f35ec4d2a19f9b9	v3.11	front50,gate,orca
+apk	libxtst	1.2.3-r3	libxtst	custom	permissive	299eb6e190d5392d92ed544344f975f6016a655f	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+apk	musl	1.1.24-r10	musl	MIT	permissive	908046ad5f96c4c1df5541ff4b0251767e110c85	v3.12	clouddriver,rosco
+apk	musl	1.1.24-r3	musl	MIT	permissive	646c516367f8746a5d153ee00cf264316451b196	v3.11	front50,gate,orca
+apk	musl-utils	1.1.24-r10	musl	MIT BSD GPL2+	gpl	908046ad5f96c4c1df5541ff4b0251767e110c85	v3.12	clouddriver,rosco
+apk	musl-utils	1.1.24-r3	musl	MIT BSD GPL2+	gpl	646c516367f8746a5d153ee00cf264316451b196	v3.11	front50,gate,orca
+apk	ncurses-libs	6.1_p20200118-r4	ncurses	MIT	permissive	25f0bae76247fa5eb76faae67f179ea8b758f828	v3.11	front50,gate,orca
+apk	ncurses-libs	6.2_p20200523-r0	ncurses	MIT	permissive	254afca762a5cda8bc06827d0027310cc3b1b5f3	v3.12	clouddriver,rosco
+apk	ncurses-terminfo-base	6.1_p20200118-r4	ncurses	MIT	permissive	25f0bae76247fa5eb76faae67f179ea8b758f828	v3.11	front50,gate,orca
+apk	ncurses-terminfo-base	6.2_p20200523-r0	ncurses	MIT	permissive	254afca762a5cda8bc06827d0027310cc3b1b5f3	v3.12	clouddriver,rosco
+apk	nghttp2-libs	1.41.0-r0	nghttp2	MIT	permissive	fe7417f5c2fd0ea8b513ce1f1eeebf14f20eb56d	v3.12	clouddriver,rosco
+apk	openjdk11	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver
+apk	openjdk11-demos	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver
+apk	openjdk11-doc	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver
+apk	openjdk11-jdk	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver
+apk	openjdk11-jmods	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver
+apk	openjdk11-jre	11.0.5_p10-r0	openjdk11	GPL-2.0 with Classpath	gpl	560237ff9917d565c4a2134a75d0b77a4ec02516	v3.11	front50,gate,orca
+apk	openjdk11-jre	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver,rosco
+apk	openjdk11-jre-headless	11.0.5_p10-r0	openjdk11	GPL-2.0 with Classpath	gpl	560237ff9917d565c4a2134a75d0b77a4ec02516	v3.11	front50,gate,orca
+apk	openjdk11-jre-headless	11.0.9_p11-r0	openjdk11	GPL-2.0-with-classpath-exception	gpl	ea4636f2a587561db565f796e436072868024cbf	v3.12	clouddriver,rosco
+apk	openssh-client	8.3_p1-r1	openssh	BSD	permissive	20ed8327b9ee7b0920813b009bcbd8001f07a3b5	v3.12	clouddriver,rosco
+apk	openssh-keygen	8.3_p1-r1	openssh	BSD	permissive	20ed8327b9ee7b0920813b009bcbd8001f07a3b5	v3.12	clouddriver,rosco
+apk	openssl	1.1.1i-r0	openssl	OpenSSL	permissive	9e04b0fdd0665f27ea5d557286eda64cc877322f	v3.12	rosco
+apk	p11-kit	0.23.18.1-r1	p11-kit	BSD-3-Clause	permissive	2674bcece0f4941722192a7d4d57cab30d595b79	v3.11	front50,gate,orca
+apk	p11-kit	0.23.22-r0	p11-kit	BSD-3-Clause	permissive	6774faddb52defe076710438affc419fe6349b33	v3.12	clouddriver,rosco
+apk	p11-kit-trust	0.23.18.1-r1	p11-kit	BSD-3-Clause	permissive	2674bcece0f4941722192a7d4d57cab30d595b79	v3.11	front50,gate,orca
+apk	p11-kit-trust	0.23.22-r0	p11-kit	BSD-3-Clause	permissive	6774faddb52defe076710438affc419fe6349b33	v3.12	clouddriver,rosco
+apk	pcre2	10.35-r0	pcre2	BSD-3-Clause	permissive	688185b826de2598daff359b224f44529ab7a8ba	v3.12	clouddriver,rosco
+apk	readline	8.0.1-r0	readline	GPL-2.0-or-later	gpl	69d654f853aec47e0d7157e66108f6f4c3640ec5	v3.11	front50,gate,orca
+apk	readline	8.0.4-r0	readline	GPL-2.0-or-later	gpl	498967de775f0fa1e27d6e009b962a48cae56328	v3.12	clouddriver,rosco
+apk	scanelf	1.2.4-r0	pax-utils	GPL-2.0-only	gpl	c2bc0a44e12b8015a83e04a9881714deb3526d80	v3.11	front50,gate,orca
+apk	scanelf	1.2.6-r0	pax-utils	GPL-2.0-only	gpl	753fa8d765c7a4edb76f11b1995f84cdcb45bce5	v3.12	clouddriver,rosco
+apk	sqlite-libs	3.32.1-r0	sqlite	Public-Domain	permissive	75db6ebb7976d163ae267c2893933ff790bf9b2c	v3.12	clouddriver
+apk	ssl_client	1.31.1-r19	busybox	GPL-2.0-only	gpl	b8f92cf12ab6e48d1c3a7a0e590521581443e720	v3.12	clouddriver,rosco
+apk	ssl_client	1.31.1-r9	busybox	GPL-2.0-only	gpl	e5c984f68aabb28de623a7e3ada5a223c2b66d77	v3.11	front50,gate,orca
+apk	wget	1.20.3-r1	wget	GPL-3.0-or-later	gpl	ced1a8b8b4b8d904ee0239c12b4d72699eb89493	v3.12	clouddriver,rosco
+apk	xz-libs	5.2.5-r0	xz	GPL-2.0-or-later AND Public-Domain AND LGPL-2.1-or-later	gpl	9d8a8521f972a1ee34a26d9a654a01528c3bf0a4	v3.12	clouddriver
+apk	zlib	1.2.11-r3	zlib	Zlib	permissive	388a4fb3640f8ccbd18e105df3ad741dca4247e1	v3.11,v3.12	clouddriver,front50,gate,orca,rosco
+dpkg	adduser	3.118	adduser=3.118	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	apt	1.8.2.1	apt=1.8.2.1	GPLv2+	gpl		debian-10.6	echo
+dpkg	base-files	10.3+deb10u6	base-files=10.3+deb10u6	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	base-passwd	3.5.46	base-passwd=3.5.46	GPL-2 PD	gpl		debian-10.6	echo
+dpkg	bash	5.0-4	bash=5.0-4	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	bsdutils	1:2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	bzip2	1.0.6-9.2~deb10u1	bzip2=1.0.6-9.2~deb10u1	BSD-variant GPL-2	gpl		debian-10.6	echo
+dpkg	ca-certificates	20200601~deb10u1	ca-certificates=20200601~deb10u1	GPL-2+ MPL-2.0	gpl		debian-10.6	echo
+dpkg	coreutils	8.30-3	coreutils=8.30-3	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	curl	7.64.0-4+deb10u1	curl=7.64.0-4+deb10u1	curl ISC BSD-3-Clause public-domain BSD-4-Clause other	permissive		debian-10.6	echo
+dpkg	dash	0.5.10.2-5	dash=0.5.10.2-5	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	debconf	1.5.71	debconf=1.5.71	BSD-2-clause	permissive		debian-10.6	echo
+dpkg	debian-archive-keyring	2019.1	debian-archive-keyring=2019.1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	debianutils	4.8.6.1	debianutils=4.8.6.1	GPL public-domain (unstructured)	gpl		debian-10.6	echo
+dpkg	diffutils	1:3.7-3	diffutils=1:3.7-3	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	dirmngr	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	dpkg	1.19.7	dpkg=1.19.7	GPL-2+ GPL-2 BSD-2-clause public-domain-s-s-d public-domain-md5	gpl		debian-10.6	echo
+dpkg	e2fsprogs	1.44.5-1+deb10u3	e2fsprogs=1.44.5-1+deb10u3	GPL LGPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	fdisk	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	findutils	4.6.0+git+20190209-2	findutils=4.6.0+git+20190209-2	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	fontconfig	2.13.1-2	fontconfig=2.13.1-2	unknown	check		debian-10.6	echo
+dpkg	fontconfig-config	2.13.1-2	fontconfig=2.13.1-2	unknown	check		debian-10.6	echo
+dpkg	fonts-dejavu-core	2.37-1	fonts-dejavu=2.37-1	bitstream-vera GPL-2+	gpl		debian-10.6	echo
+dpkg	gcc-8-base	8.3.0-6	gcc-8=8.3.0-6	GPL LGPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	git	1:2.20.1-2+deb10u3	git=1:2.20.1-2+deb10u3	GPL-2 LGPL-2.1+ EDL-1.0 GPL-2+ Expat BSD-2-clause GPL-1+ Artistic-1 ISC mingw-runtime Boost dlmalloc Apache-2.0 LGPL-2+	gpl		debian-10.6	echo
+dpkg	git-man	1:2.20.1-2+deb10u3	git=1:2.20.1-2+deb10u3	GPL-2 LGPL-2.1+ EDL-1.0 GPL-2+ Expat BSD-2-clause GPL-1+ Artistic-1 ISC mingw-runtime Boost dlmalloc Apache-2.0 LGPL-2+	gpl		debian-10.6	echo
+dpkg	gnupg	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gnupg-l10n	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gnupg-utils	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpg	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpg-agent	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpg-wks-client	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpg-wks-server	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpgconf	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpgsm	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	gpgv	2.2.12-1+deb10u1	gnupg2=2.2.12-1+deb10u1	GPL-3+ permissive LGPL-2.1+ Expat BSD-3-clause LGPL-3+ RFC-Reference TinySCHEME CC0-1.0	gpl		debian-10.6	echo
+dpkg	grep	3.3-1	grep=3.3-1	GPL-3+	gpl		debian-10.6	echo
+dpkg	gzip	1.9-3	gzip=1.9-3	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	hostname	3.21	hostname=3.21	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	init-system-helpers	1.56+nmu1	init-system-helpers=1.56+nmu1	BSD-3-clause GPL-2+	gpl		debian-10.6	echo
+dpkg	iproute2	4.20.0-2	iproute2=4.20.0-2	GPL-2	gpl		debian-10.6	echo
+dpkg	iputils-ping	3:20180629-2+deb10u1	iputils=3:20180629-2+deb10u1	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libacl1	2.2.53-4	acl=2.2.53-4	GPL-2+ LGPL-2+	gpl		debian-10.6	echo
+dpkg	libapr1	1.6.5-1+b1	apr=1.6.5-1	Apache (unstructured)	check		debian-10.6	echo
+dpkg	libaprutil1	1.6.1-4	apr-util=1.6.1-4	Apache (unstructured)	check		debian-10.6	echo
+dpkg	libapt-pkg5.0	1.8.2.1	apt=1.8.2.1	GPLv2+	gpl		debian-10.6	echo
+dpkg	libassuan0	2.5.2-1	libassuan=2.5.2-1	LGPL-2.1+ GAP~FSF LGPL-3+ GPL-2+ with libtool exception GPL-3+ GAP GPL-2+	gpl		debian-10.6	echo
+dpkg	libattr1	1:2.4.48-4	attr=1:2.4.48-4	GPL-2+ LGPL-2+	gpl		debian-10.6	echo
+dpkg	libaudit-common	1:2.8.4-3	audit=1:2.8.4-3	GPL-2 LGPL-2.1	gpl		debian-10.6	echo
+dpkg	libaudit1	1:2.8.4-3	audit=1:2.8.4-3	GPL-2 LGPL-2.1	gpl		debian-10.6	echo
+dpkg	libblkid1	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	libbsd0	0.9.1-2	libbsd=0.9.1-2	BSD-3-clause BSD-4-clause-Niels-Provos BSD-4-clause-Christopher-G-Demetriou BSD-3-clause-Regents BSD-2-clause-NetBSD BSD-3-clause-author BSD-3-clause-John-Birrell BSD-5-clause-Peter-Wemm BSD-2-clause BSD-2-clause-verbatim BSD-2-clause-author ISC ISC-Original Expat public-domain-Colin-Plumb public-domain Beerware	permissive		debian-10.6	echo
+dpkg	libbz2-1.0	1.0.6-9.2~deb10u1	bzip2=1.0.6-9.2~deb10u1	BSD-variant GPL-2	gpl		debian-10.6	echo
+dpkg	libc-bin	2.28-10	glibc=2.28-10	GPL LGPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libc6	2.28-10	glibc=2.28-10	GPL LGPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libcap-ng0	0.7.9-2	libcap-ng=0.7.9-2	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libcap2	1:2.25-2	libcap2=1:2.25-2	BSD-3-clause GPL-2 GPL-2+	gpl		debian-10.6	echo
+dpkg	libcap2-bin	1:2.25-2	libcap2=1:2.25-2	BSD-3-clause GPL-2 GPL-2+	gpl		debian-10.6	echo
+dpkg	libcom-err2	1.44.5-1+deb10u3	e2fsprogs=1.44.5-1+deb10u3	unknown	check		debian-10.6	echo
+dpkg	libcurl3-gnutls	7.64.0-4+deb10u1	curl=7.64.0-4+deb10u1	curl ISC BSD-3-Clause public-domain BSD-4-Clause other	permissive		debian-10.6	echo
+dpkg	libcurl4	7.64.0-4+deb10u1	curl=7.64.0-4+deb10u1	curl ISC BSD-3-Clause public-domain BSD-4-Clause other	permissive		debian-10.6	echo
+dpkg	libdb5.3	5.3.28+dfsg1-0.5	db5.3=5.3.28+dfsg1-0.5	unknown	check		debian-10.6	echo
+dpkg	libdebconfclient0	0.249	cdebconf=0.249	public-domain (unstructured)	check		debian-10.6	echo
+dpkg	libedit2	3.1-20181209-1	libedit=3.1-20181209-1	BSD-3-clause	permissive		debian-10.6	echo
+dpkg	libelf1	0.176-1.1	elfutils=0.176-1.1	Most of the libraries (lib libelf libebl libdw libdwfl) have the following license:	permissive		debian-10.6	echo
+dpkg	liberror-perl	0.17027-2	liberror-perl=0.17027-2	Artistic GPL-1+ MIT/X11	gpl		debian-10.6	echo
+dpkg	libexpat1	2.2.6-2+deb10u1	expat=2.2.6-2+deb10u1	MIT	permissive		debian-10.6	echo
+dpkg	libext2fs2	1.44.5-1+deb10u3	e2fsprogs=1.44.5-1+deb10u3	GPL LGPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	libfdisk1	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	libffi6	3.2.1-9	libffi=3.2.1-9	Inc others.	permissive		debian-10.6	echo
+dpkg	libfontconfig1	2.13.1-2	fontconfig=2.13.1-2	unknown	check		debian-10.6	echo
+dpkg	libfreetype6	2.9.1-3+deb10u1	freetype=2.9.1-3+deb10u1	GPL-2+ FTL Catharon-OSL MIT BSD-3-Clause FSFULLR FSFUL Permissive GPL-3+ Public-Domain Zlib OpenGroup-BSD-like	gpl		debian-10.6	echo
+dpkg	libgcc1	1:8.3.0-6	gcc-8=8.3.0-6	unknown	check		debian-10.6	echo
+dpkg	libgcrypt20	1.8.4-5	libgcrypt20=1.8.4-5	GPL LGPL BSD public-domain (unstructured)	gpl		debian-10.6	echo
+dpkg	libgdbm-compat4	1.18.1-4	gdbm=1.18.1-4	GPL-3+ GPL-2+ GFDL-NIV-1.3+	gpl		debian-10.6	echo
+dpkg	libgdbm6	1.18.1-4	gdbm=1.18.1-4	GPL-3+ GPL-2+ GFDL-NIV-1.3+	gpl		debian-10.6	echo
+dpkg	libgmp10	2:6.1.2+dfsg-4	gmp=2:6.1.2+dfsg-4	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libgnutls30	3.6.7-4+deb10u5	gnutls28=3.6.7-4+deb10u5	* Redistribution use in source binary forms with without Public domain. CC0 license The MIT License (MIT) LGPLv3+_or_GPLv2+ based on Russian standard GOST 28147-89 GPLv3+	gpl		debian-10.6	echo
+dpkg	libgpg-error0	1.35-1	libgpg-error=1.35-1	LGPL-2.1+ BSD-3-clause g10-permissive GPL-3+	gpl		debian-10.6	echo
+dpkg	libgssapi-krb5-2	1.17-3	krb5=1.17-3	GPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	libhogweed4	3.4.1-1	nettle=3.4.1-1	unknown	check		debian-10.6	echo
+dpkg	libidn2-0	2.0.5-1+deb10u1	libidn2=2.0.5-1+deb10u1	GPL-3+ LGPL-3+ GPL-2+ Unicode	gpl		debian-10.6	echo
+dpkg	libk5crypto3	1.17-3	krb5=1.17-3	GPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	libkeyutils1	1.6-6	keyutils=1.6-6	GPL-2+ LGPL-2+	gpl		debian-10.6	echo
+dpkg	libkrb5-3	1.17-3	krb5=1.17-3	GPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	libkrb5support0	1.17-3	krb5=1.17-3	GPL BSD MIT (unstructured)	gpl		debian-10.6	echo
+dpkg	libksba8	1.3.5-2	libksba=1.3.5-2	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libldap-2.4-2	2.4.47+dfsg-3+deb10u2	openldap=2.4.47+dfsg-3+deb10u2	MIT (unstructured)	check		debian-10.6	echo
+dpkg	libldap-common	2.4.47+dfsg-3+deb10u2	openldap=2.4.47+dfsg-3+deb10u2	MIT (unstructured)	check		debian-10.6	echo
+dpkg	liblz4-1	1.8.3-1	lz4=1.8.3-1	BSD-2-clause GPL-2+ GPL-2	gpl		debian-10.6	echo
+dpkg	liblzma5	5.2.4-1	xz-utils=5.2.4-1	PD probably-PD GPL-2+ LGPL-2.1+ permissive-fsf Autoconf permissive-nowarranty GPL-2 none config-h noderivs PD-debian	gpl		debian-10.6	echo
+dpkg	libmnl0	1.0.4-2	libmnl=1.0.4-2	LGPL-2.1 GPL-2+	gpl		debian-10.6	echo
+dpkg	libmount1	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	libncurses6	6.1+20181013-2+deb10u2	ncurses=6.1+20181013-2+deb10u2	unknown	check		debian-10.6	echo
+dpkg	libncursesw6	6.1+20181013-2+deb10u2	ncurses=6.1+20181013-2+deb10u2	unknown	check		debian-10.6	echo
+dpkg	libnettle6	3.4.1-1	nettle=3.4.1-1	LGPL-2.1+ LGPL-2+ other GPL-2+ GPL-2+ with Autoconf exception public-domain GPL-2 GAP	gpl		debian-10.6	echo
+dpkg	libnghttp2-14	1.36.0-2+deb10u1	nghttp2=1.36.0-2+deb10u1	Expat MIT all-permissive GPL-3+ with autoconf exception BSD-2-clause SIL-OFL-1.1	gpl		debian-10.6	echo
+dpkg	libnpth0	1.6-1	npth=1.6-1	LGPL-2.1+	gpl		debian-10.6	echo
+dpkg	libp11-kit0	0.23.15-2	p11-kit=0.23.15-2	BSD-3-Clause permissive-like-automake-output ISC ISC+IBM same-as-rest-of-p11kit	permissive		debian-10.6	echo
+dpkg	libpam-modules	1.3.1-5	pam=1.3.1-5	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libpam-modules-bin	1.3.1-5	pam=1.3.1-5	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libpam-runtime	1.3.1-5	pam=1.3.1-5	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libpam0g	1.3.1-5	pam=1.3.1-5	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	libpcre2-8-0	10.32-5	pcre2=10.32-5	BSD public-domain (unstructured)	check		debian-10.6	echo
+dpkg	libpcre3	2:8.39-12	pcre3=2:8.39-12	BSD (unstructured)	check		debian-10.6	echo
+dpkg	libperl5.28	5.28.1-6+deb10u1	perl=5.28.1-6+deb10u1	GPL-1+ Artistic Expat REGCOMP GPL-3+-WITH-BISON-EXCEPTION Unicode S2P BZIP ZLIB GPL-2+ RRA-KEEP-THIS-NOTICE BSD-3-clause-with-weird-numbering CC0-1.0 TEXT-TABS BSD-4-clause-POWERDOG BSD-3-clause-GENERIC BSD-3-clause SDBM-PUBLIC-DOMAIN DONT-CHANGE-THE-GPL Artistic-dist LGPL-2.1 Artistic-2 HSIEH-DERIVATIVE HSIEH-BSD	gpl		debian-10.6	echo
+dpkg	libpng16-16	1.6.36-6	libpng1.6=1.6.36-6	libpng expat GPL-2+ BSD-like-with-advertising-clause libpng OR Apache-2.0 OR BSD-3-clause Apache-2.0 BSD-3-clause	gpl		debian-10.6	echo
+dpkg	libprocps7	2:3.3.15-2	procps=2:3.3.15-2	LGPL-2.1+ LGPL-2.0+ GPL-2.0+	gpl		debian-10.6	echo
+dpkg	libpsl5	0.20.2-2	libpsl=0.20.2-2	MIT Chromium	permissive		debian-10.6	echo
+dpkg	libpython-stdlib	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libpython2-stdlib	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libpython2.7-minimal	2.7.16-2+deb10u1	python2.7=2.7.16-2+deb10u1	licenses and This software is provided 'as-is' without any express implied Permission is hereby granted free of charge to any person obtaining This software is provided as-is without express * Permission to use copy modify distribute this software and see above some license as Python. Expat PSF-2 Apache-2 Apache-2.0 Python to any person obtaining a copy of ISC Apache LGPL-2.1+	gpl		debian-10.6	echo
+dpkg	libpython2.7-stdlib	2.7.16-2+deb10u1	python2.7=2.7.16-2+deb10u1	unknown	check		debian-10.6	echo
+dpkg	libreadline7	7.0-5	readline=7.0-5	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	librtmp1	2.4+20151223.gitfa8646d.1-2	rtmpdump=2.4+20151223.gitfa8646d.1-2	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libsasl2-2	2.1.27+dfsg-1+deb10u1	cyrus-sasl2=2.1.27+dfsg-1+deb10u1	BSD-4-clause GPL-3+	gpl		debian-10.6	echo
+dpkg	libsasl2-modules-db	2.1.27+dfsg-1+deb10u1	cyrus-sasl2=2.1.27+dfsg-1+deb10u1	BSD-4-clause GPL-3+	gpl		debian-10.6	echo
+dpkg	libseccomp2	2.3.3-4	libseccomp=2.3.3-4	LGPL-2.1	gpl		debian-10.6	echo
+dpkg	libselinux1	2.8-1+b1	libselinux=2.8-1	GPL LGPL public-domain (unstructured)	gpl		debian-10.6	echo
+dpkg	libsemanage-common	2.8-2	libsemanage=2.8-2	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libsemanage1	2.8-2	libsemanage=2.8-2	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libsepol1	2.8-1	libsepol=2.8-1	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libserf-1-1	1.3.9-7+b10	serf=1.3.9-7	Apache Zlib	permissive		debian-10.6	echo
+dpkg	libsmartcols1	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	libsqlite3-0	3.27.2-3	sqlite3=3.27.2-3	public-domain GPL-2+	gpl		debian-10.6	echo
+dpkg	libss2	1.44.5-1+deb10u3	e2fsprogs=1.44.5-1+deb10u3	unknown	check		debian-10.6	echo
+dpkg	libssh2-1	1.8.0-2.1	libssh2=1.8.0-2.1	BSD3	permissive		debian-10.6	echo
+dpkg	libssl1.1	1.1.1d-0+deb10u3	openssl=1.1.1d-0+deb10u3	BSD (unstructured)	check		debian-10.6	echo
+dpkg	libstdc++6	8.3.0-6	gcc-8=8.3.0-6	unknown	check		debian-10.6	echo
+dpkg	libsvn1	1.10.4-1+deb10u1	subversion=1.10.4-1+deb10u1	Apache-2.0 BSD-3-clause Utfwidth Svnwrap GPL-2+ GPL-3+ AFL-3 Expat Unicode BSD-2-clause	gpl		debian-10.6	echo
+dpkg	libsystemd0	241-7~deb10u4	systemd=241-7~deb10u4	LGPL-2.1+ CC0-1.0 GPL-2 GPL-2+ Expat public-domain	gpl		debian-10.6	echo
+dpkg	libtasn1-6	4.13-3	libtasn1-6=4.13-3	GPL LGPL (unstructured)	gpl		debian-10.6	echo
+dpkg	libtinfo6	6.1+20181013-2+deb10u2	ncurses=6.1+20181013-2+deb10u2	unknown	check		debian-10.6	echo
+dpkg	libudev1	241-7~deb10u4	systemd=241-7~deb10u4	LGPL-2.1+ CC0-1.0 GPL-2 GPL-2+ Expat public-domain	gpl		debian-10.6	echo
+dpkg	libunistring2	0.9.10-1	libunistring=0.9.10-1	LGPL-3+ GPL-2+ FreeSoftware GPL-2+ with distribution exception GPL-3+ GFDL-1.2+ MIT	gpl		debian-10.6	echo
+dpkg	libutf8proc2	2.3.0-1	utf8proc=2.3.0-1	Expat Unicode	permissive		debian-10.6	echo
+dpkg	libuuid1	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	libxtables12	1.8.2-4	iptables=1.8.2-4	GPL-2 Artistic-2 GPL-2+ custom	gpl		debian-10.6	echo
+dpkg	libzstd1	1.3.8+dfsg-3	libzstd=1.3.8+dfsg-3	BSD-3-clause GPL-2 zlib GPL-2+ Expat	gpl		debian-10.6	echo
+dpkg	login	1:4.5-1.1	shadow=1:4.5-1.1	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	lsb-base	10.2019051400	lsb=10.2019051400	GPL-2 BSD-3-clause	gpl		debian-10.6	echo
+dpkg	mawk	1.3.3-17+b3	mawk=1.3.3-17	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	mercurial	4.8.2-1+deb10u1	mercurial=4.8.2-1+deb10u1	GPL-2+ Redistribution use in source binary forms with without modification Permission is hereby granted free of charge to any person obtaining a copy to any person obtaining a copy of this LGPL-2.1+ Zope Public License (ZPL) Version 2.1	gpl		debian-10.6	echo
+dpkg	mercurial-common	4.8.2-1+deb10u1	mercurial=4.8.2-1+deb10u1	GPL-2+ Redistribution use in source binary forms with without modification Permission is hereby granted free of charge to any person obtaining a copy to any person obtaining a copy of this LGPL-2.1+ Zope Public License (ZPL) Version 2.1	gpl		debian-10.6	echo
+dpkg	mime-support	3.62	mime-support=3.62	ad-hoc Bellcore	permissive		debian-10.6	echo
+dpkg	mount	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	ncurses-base	6.1+20181013-2+deb10u2	ncurses=6.1+20181013-2+deb10u2	unknown	check		debian-10.6	echo
+dpkg	ncurses-bin	6.1+20181013-2+deb10u2	ncurses=6.1+20181013-2+deb10u2	unknown	check		debian-10.6	echo
+dpkg	netbase	5.6	netbase=5.6	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	openssh-client	1:7.9p1-10+deb10u2	openssh=1:7.9p1-10+deb10u2	OpenSSH Mazieres-BSD-style public-domain BSD-3-clause Beer-ware Powell-BSD-style Expat-with-advertising-restriction BSD-2-clause	permissive		debian-10.6	echo
+dpkg	openssl	1.1.1d-0+deb10u3	openssl=1.1.1d-0+deb10u3	BSD (unstructured)	check		debian-10.6	echo
+dpkg	p11-kit	0.23.15-2	p11-kit=0.23.15-2	BSD-3-Clause permissive-like-automake-output ISC ISC+IBM same-as-rest-of-p11kit	permissive		debian-10.6	echo
+dpkg	p11-kit-modules	0.23.15-2	p11-kit=0.23.15-2	unknown	check		debian-10.6	echo
+dpkg	passwd	1:4.5-1.1	shadow=1:4.5-1.1	GPL BSD (unstructured)	gpl		debian-10.6	echo
+dpkg	perl	5.28.1-6+deb10u1	perl=5.28.1-6+deb10u1	GPL-1+ Artistic Expat REGCOMP GPL-3+-WITH-BISON-EXCEPTION Unicode S2P BZIP ZLIB GPL-2+ RRA-KEEP-THIS-NOTICE BSD-3-clause-with-weird-numbering CC0-1.0 TEXT-TABS BSD-4-clause-POWERDOG BSD-3-clause-GENERIC BSD-3-clause SDBM-PUBLIC-DOMAIN DONT-CHANGE-THE-GPL Artistic-dist LGPL-2.1 Artistic-2 HSIEH-DERIVATIVE HSIEH-BSD	gpl		debian-10.6	echo
+dpkg	perl-base	5.28.1-6+deb10u1	perl=5.28.1-6+deb10u1	unknown	check		debian-10.6	echo
+dpkg	perl-modules-5.28	5.28.1-6+deb10u1	perl=5.28.1-6+deb10u1	GPL-1+ Artistic Expat REGCOMP GPL-3+-WITH-BISON-EXCEPTION Unicode S2P BZIP ZLIB GPL-2+ RRA-KEEP-THIS-NOTICE BSD-3-clause-with-weird-numbering CC0-1.0 TEXT-TABS BSD-4-clause-POWERDOG BSD-3-clause-GENERIC BSD-3-clause SDBM-PUBLIC-DOMAIN DONT-CHANGE-THE-GPL Artistic-dist LGPL-2.1 Artistic-2 HSIEH-DERIVATIVE HSIEH-BSD	gpl		debian-10.6	echo
+dpkg	pinentry-curses	1.1.0-2	pinentry=1.1.0-2	GPL-2+ GPL-2 X11 LGPL-3+	gpl		debian-10.6	echo
+dpkg	procps	2:3.3.15-2	procps=2:3.3.15-2	LGPL-2.1+ LGPL-2.0+ GPL-2.0+	gpl		debian-10.6	echo
+dpkg	python	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	python-minimal	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	python2	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	python2-minimal	2.7.16-1	python-defaults=2.7.16-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	python2.7	2.7.16-2+deb10u1	python2.7=2.7.16-2+deb10u1	licenses and This software is provided 'as-is' without any express implied Permission is hereby granted free of charge to any person obtaining This software is provided as-is without express * Permission to use copy modify distribute this software and see above some license as Python. Expat PSF-2 Apache-2 Apache-2.0 Python to any person obtaining a copy of ISC Apache LGPL-2.1+	gpl		debian-10.6	echo
+dpkg	python2.7-minimal	2.7.16-2+deb10u1	python2.7=2.7.16-2+deb10u1	licenses and This software is provided 'as-is' without any express implied Permission is hereby granted free of charge to any person obtaining This software is provided as-is without express * Permission to use copy modify distribute this software and see above some license as Python. Expat PSF-2 Apache-2 Apache-2.0 Python to any person obtaining a copy of ISC Apache LGPL-2.1+	gpl		debian-10.6	echo
+dpkg	readline-common	7.0-5	readline=7.0-5	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	sed	4.7-1	sed=4.7-1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	sensible-utils	0.0.12	sensible-utils=0.0.12	GPL-2+ All-permissive configure installsh	gpl		debian-10.6	echo
+dpkg	subversion	1.10.4-1+deb10u1	subversion=1.10.4-1+deb10u1	Apache-2.0 BSD-3-clause Utfwidth Svnwrap GPL-2+ GPL-3+ AFL-3 Expat Unicode BSD-2-clause	gpl		debian-10.6	echo
+dpkg	sysvinit-utils	2.93-8	sysvinit=2.93-8	GPL-2+	gpl		debian-10.6	echo
+dpkg	tar	1.30+dfsg-6	tar=1.30+dfsg-6	GPL public-domain (unstructured)	gpl		debian-10.6	echo
+dpkg	tzdata	2020a-0+deb10u1	tzdata=2020a-0+deb10u1	public-domain (unstructured)	check		debian-10.6	echo
+dpkg	ucf	3.0038+nmu1	ucf=3.0038+nmu1	GPL-2	gpl		debian-10.6	echo
+dpkg	unzip	6.0-23+deb10u1	unzip=6.0-23+deb10u1	unknown	check		debian-10.6	echo
+dpkg	util-linux	2.33.1-0.1	util-linux=2.33.1-0.1	GPL-2+ GPL-2 public-domain BSD-4-clause MIT BSD-2-clause BSD-3-clause LGPL-2+ LGPL-2.1+ GPL-3+ LGPL LGPL-3+	gpl		debian-10.6	echo
+dpkg	wget	1.20.1-1.1	wget=1.20.1-1.1	GPL (unstructured)	gpl		debian-10.6	echo
+dpkg	xz-utils	5.2.4-1	xz-utils=5.2.4-1	PD probably-PD GPL-2+ LGPL-2.1+ permissive-fsf Autoconf permissive-nowarranty GPL-2 none config-h noderivs PD-debian	gpl		debian-10.6	echo
+dpkg	zlib1g	1:1.2.11.dfsg-1	zlib=1:1.2.11.dfsg-1	Zlib	permissive		debian-10.6	echo
