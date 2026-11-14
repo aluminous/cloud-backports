@@ -41,7 +41,7 @@ Not needed: `kindest/node:v1.21.14` and `quay.io/argoproj/argo-rollouts:v1.4.1` 
 publish arm64.
 
 The published digests of every release are in the `published.yaml` file attached to that
-GitHub release. Nothing has been published yet.
+GitHub release.
 
 ## Pull
 
@@ -95,11 +95,12 @@ checks the image config (user, entrypoint, working directory), that the binary's
 `BINARY_SHA256_ARM64` from [`images/istio-pilot/1.10.6/inputs.env`](images/istio-pilot/1.10.6/inputs.env),
 and that `pilot-discovery version` reports 1.10.6, the upstream revision, `Clean` and
 `go1.16.9`. The binary is reproducible: rebuild it yourself ([BUILDING.md](BUILDING.md)) and
-compare. Provenance attestations (GitHub artifact attestations) are pushed with each image once this
-repository is public (GitHub does not offer them for user-owned private repositories, so the
-workflow skips that step while it is private):
-`gh attestation verify oci://<reference> --owner aluminous`. The amd64 half is upstream's
-own manifest: compare its digest with `docker.io/istio/pilot:1.10.6` (`crane digest
+compare. Each published image (the index and the arm64 image) carries a GitHub build-provenance
+attestation, signed by the CI run that built it. Verify it with
+`gh attestation verify oci://ghcr.io/aluminous/cloud-backports/istio-pilot@sha256:<digest> --owner aluminous`
+(the workflow skips the attestation steps only while the repository is private, because GitHub
+does not offer them there). The amd64 half is upstream's
+own manifest, with no attestation here: compare its digest with `docker.io/istio/pilot:1.10.6` (`crane digest
 --platform linux/amd64 docker.io/istio/pilot:1.10.6`).
 
 ## Repository layout
@@ -127,8 +128,7 @@ runs the verification, and only on a tag `istio-pilot-1.10.6*` or a manual run p
 `istio-pilot:1.10.6-arm64`, assembles `istio-pilot:1.10.6`, attests provenance for both (public repository only), and
 attaches `published.yaml`, the digests of what was published, to the release. Pull
 requests build and verify but never push. Token permissions are per job and minimal;
-actions are pinned by commit SHA. **The workflow has been linted (actionlint, shellcheck) but
-has not run yet.**
+actions are pinned by commit SHA.
 
 ## Licences
 
