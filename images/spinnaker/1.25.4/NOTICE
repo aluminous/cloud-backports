@@ -1,0 +1,81 @@
+Spinnaker 1.25.4 service images (archive)
+
+What these are
+  The service images of Spinnaker release 1.25.4 (clouddriver, front50, gate, orca, rosco),
+  linux/amd64, exactly as upstream built them. Nothing was rebuilt, patched or modified: each
+  image's configuration (its image ID) and every layer are byte for byte those of the archive
+  they were taken from. The only new thing is the registry packaging: an OCI manifest that
+  lists the original layers (uncompressed, as in the archive) and the original configuration,
+  built by scripts/push-spinnaker.py (annotations carry the original reference and image ID).
+
+Where and when they were obtained
+  Saved from us-docker.pkg.dev/spinnaker-community/docker/<service>:<tag> into the bundle
+  cache of an earlier test harness (that cache's manifest.json is dated 2026-07-24T03:57:50Z;
+  the registry digests were not recorded there). The five archives are pinned by file sha256
+  in images/spinnaker/1.25.4/inputs.env. On 2026-11-14 the tags no longer resolved at
+  us-docker.pkg.dev or gcr.io/spinnaker-marketplace (HTTP 404 MANIFEST_UNKNOWN; see
+  BUILDING.md), so these archives are the only copy known to this repository.
+
+  service      tag                         image ID (config digest)
+  clouddriver  7.3.3-20210322155326        sha256:48a25fb6fb34f971e0c8b4704f5c511aa4f1d20bacdbe05d345b9568d03bc3b8
+  front50      0.26.2-20210216140019       sha256:7c65eaab9171f00e71ef0b3cf549ee97f1e665c99c81613eb3a922cce636001b
+  gate         1.21.0-20210215200018       sha256:7c2e8142a3c330727574f88a8f54fc6479f4ab9f7e7c15be3d12d1e990425c00
+  orca         2.19.0-20210209140018       sha256:13efa8585e466b601cbb01ab4b0b92915d4cc8143ea1d0ead8cd6a9b8a87e1b2
+  rosco        0.24.0-20210210110018       sha256:f12a552b5f961f9bbe50667f8fab1c1ae9447ad72b2b9a8f8a840a9d0298841c
+
+  The versions are those of the release's bill of materials (1.25.4, 2021-03-30). Echo,
+  Deck, Fiat, Igor, Kayenta and the monitoring services of the release are not included.
+
+Licence of Spinnaker
+  The services are part of Spinnaker (https://github.com/spinnaker), Copyright the Spinnaker
+  authors, licensed under the Apache License, Version 2.0 (GitHub reports Apache-2.0 for the
+  repositories, e.g. spinnaker/gate). The images do not contain a LICENSE or NOTICE file of
+  their own under /opt/<service> (checked in the layers of all five). The service jars bundle
+  further third-party libraries; they were not enumerated.
+
+  This is not an official Spinnaker release or distribution and is not endorsed by the
+  Spinnaker project, the Continuous Delivery Foundation or the original publisher.
+
+Third-party content in the images (facts read from the layers)
+  Base distribution: Alpine Linux (musl libc 1.1.24, BusyBox 1.31.1, bash 5.0.x, apk).
+    front50, gate, orca   Alpine 3.11.7   43 apk packages   OpenJDK 11.0.5 (package 11.0.5_p10-r0)
+    rosco                 Alpine 3.12.3   57 apk packages   OpenJDK 11.0.9 (package 11.0.9_p11-r0)
+    clouddriver           Alpine 3.12.4   74 apk packages   OpenJDK 11.0.9 (package 11.0.9_p11-r0)
+  JVM: OpenJDK 11 as packaged by Alpine ("IMPLEMENTOR=Alpine" in the JVM's release file,
+    LIBC=musl, built for x86_64); licence GPL-2.0 with the Classpath exception (as recorded in
+    the apk package metadata); the JDK's LICENSE and ASSEMBLY_EXCEPTION files are in the image
+    under /usr/lib/jvm/java-11-openjdk.
+  Other packages whose recorded licence includes GPL or LGPL (from /lib/apk/db/installed):
+    16 of 43 packages in front50/gate/orca, 20 of 57 in rosco, 32 of 74 in clouddriver. They
+    include busybox (GPL-2.0-only), bash (GPL-3.0-or-later), readline, alsa-lib, freetype,
+    libtasn1, pax-utils, apk-tools, and in clouddriver also git, util-linux, e2fsprogs, xz,
+    gettext, wget, libidn2. Two packages (libxrender, libxtst) record the licence "custom";
+    libssl/libcrypto 1.1 record "OpenSSL".
+  clouddriver, further: Python (PYTHON_VERSION 3.7.10), AWS CLI 1.18.152, kubectl 1.18.10,
+    Google Cloud SDK 313.0.1 (with its LICENSE at /opt/google-cloud-sdk), aws-iam-authenticator
+    0.4.0, ecr-token v1.0.2 (versions from the image's environment variables; not checked
+    file by file).
+  rosco, further: HashiCorp Packer 1.6.6 and kustomize 3.8.5 (from the image's environment
+    variables; not checked file by file).
+
+Where the corresponding source of the distribution packages is available
+  Each apk package record in /lib/apk/db/installed names its origin and the Alpine `aports`
+  commit it was built from (field `c`). At such a commit the build recipe is at
+    https://gitlab.alpinelinux.org/alpine/aports/-/raw/<commit>/<repository>/<origin>/APKBUILD
+  (checked on 2026-11-14 for openjdk11 at ea4636f2a587561db565f796e436072868024cbf, community,
+  and busybox at b8f92cf12ab6e48d1c3a7a0e590521581443e720, main). The recipe lists the source
+  archives; Alpine's source mirror is https://distfiles.alpinelinux.org/distfiles/<v3.11|v3.12>/
+  (busybox-1.31.1.tar.bz2 present for both). The OpenJDK source is the upstream tag
+  jdk-11.0.9-ga / jdk-11.0.5-ga of https://github.com/openjdk/jdk11u (both tags resolve); the
+  binary packages are still served at https://dl-cdn.alpinelinux.org/alpine/<v3.11|v3.12>/
+  (openjdk11-jre-headless 11.0.5_p10-r0 and 11.0.9_p11-r0 checked).
+  This repository does not host the source of these packages. What would make a source
+  archive possible without further research: for each image, the list of (package, version,
+  aports commit) from the apk database (scripts/inventory-spinnaker.py --json writes it), the
+  APKBUILD at that commit, and the tarballs named by `source=` in it, saved and published next
+  to the images. That has not been done.
+
+These images are from 2021 and receive no updates: the JVM, the libraries and OpenSSL 1.1.1
+in them are unmaintained and should be assumed to have known vulnerabilities. They exist to
+reproduce the behaviour of Spinnaker 1.25.4 in tests; do not run them with real credentials
+or on exposed networks.

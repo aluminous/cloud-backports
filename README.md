@@ -7,8 +7,9 @@ longer publishes, kept runnable for testing against platforms that still run the
   exact upstream release source with pinned inputs, so old platform versions run natively on
   Apple Silicon and arm64 CI. Each is published under one multi-arch tag: arm64 is built here,
   amd64 is upstream's official image carried over by digest (not rebuilt).
-- **Archives (planned):** upstream images that have disappeared from their registries, such as
-  the Spinnaker 1.25.4 services, preserved unmodified. See [ROADMAP.md](ROADMAP.md).
+- **Archives (prepared, not published):** upstream images that have disappeared from their
+  registries, preserved unmodified: the five Spinnaker 1.25.4 service images
+  (`spinnaker-<service>`, linux/amd64). See [Spinnaker 1.25.4 archive](#spinnaker-1254-archive).
 
 **What this is:** reproducible rebuilds of unmodified upstream release source, verified
 against pinned hashes, with the upstream licences inside the image.
@@ -42,6 +43,45 @@ publish arm64.
 
 The published digests of every release are in the `published.yaml` file attached to that
 GitHub release.
+
+## Spinnaker 1.25.4 archive
+
+Prepared, **not published**: nothing has been pushed anywhere, and nothing is published until
+the owner decides (see [ROADMAP.md](ROADMAP.md) for the open decisions). The images are
+upstream's own, saved from `us-docker.pkg.dev/spinnaker-community/docker/` before the tags
+were removed (on 2026-11-14 they no longer resolve there or at `gcr.io/spinnaker-marketplace`,
+[BUILDING.md](BUILDING.md#upstream-check)). Nothing is rebuilt or modified: each image keeps
+its original configuration (its image ID) and every layer byte for byte. All are
+linux/amd64, `docker-archive` format source, Alpine Linux base, Alpine's OpenJDK 11.
+
+| Image (as it would be published) | Original reference | Archive | Image ID (config digest) | Layers | Base | JVM |
+|---|---|---|---|---|---|---|
+| `spinnaker-clouddriver:7.3.3-20210322155326` | `us-docker.pkg.dev/spinnaker-community/docker/clouddriver:7.3.3-20210322155326` | 1,598,071,296 bytes, sha256 `39914318…f0ea` | `sha256:48a25fb6fb34…c3b8` | 14 | Alpine 3.12.4 | OpenJDK 11.0.9 |
+| `spinnaker-front50:0.26.2-20210216140019` | `…/front50:0.26.2-20210216140019` | 313,381,888 bytes, sha256 `654972c7…2950` | `sha256:7c65eaab9171…001b` | 6 | Alpine 3.11.7 | OpenJDK 11.0.5 |
+| `spinnaker-gate:1.21.0-20210215200018` | `…/gate:1.21.0-20210215200018` | 297,417,216 bytes, sha256 `8054ea1a…5825` | `sha256:7c2e8142a3c3…5c00` | 6 | Alpine 3.11.7 | OpenJDK 11.0.5 |
+| `spinnaker-orca:2.19.0-20210209140018` | `…/orca:2.19.0-20210209140018` | 323,428,352 bytes, sha256 `0ba1e1a8…1ff7` | `sha256:13efa8585e46…e1b2` | 6 | Alpine 3.11.7 | OpenJDK 11.0.5 |
+| `spinnaker-rosco:0.24.0-20210210110018` | `…/rosco:0.24.0-20210210110018` | 568,989,696 bytes, sha256 `3f51c52e…ea09` | `sha256:f12a552b5f96…841c` | 12 | Alpine 3.12.3 | OpenJDK 11.0.9 |
+
+The full values (file sha256, image ID, manifest digest) are pinned in
+[`images/spinnaker/1.25.4/inputs.env`](images/spinnaker/1.25.4/inputs.env); the licence and
+source facts are in [`images/spinnaker/1.25.4/NOTICE`](images/spinnaker/1.25.4/NOTICE). Not
+included, because they are not in the local archives: echo, deck, fiat, igor, kayenta and
+the monitoring services of release 1.25.4 (the old harness's real-Spinnaker run also used
+echo `2.15.0-20201009170017`, which is not the release's echo and is still served by
+`gcr.io/spinnaker-marketplace`; see [BUILDING.md](BUILDING.md#upstream-check)).
+
+The pushed manifest is an OCI manifest over the original, uncompressed layers, so its digest
+depends on nothing but the archive and is pinned too. Once published, pin by digest as for
+istio-pilot (`ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest>` from
+`published.yaml`); to check a published copy against the pins:
+
+```bash
+scripts/verify-spinnaker.py                    # manifest, config and diff_ids from the registry
+scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.1 GB)
+```
+
+Publishing needs the local archives: [BUILDING.md](BUILDING.md#spinnaker-1254-archive-publishing).
+These are 2021 images with unmaintained components; use them for tests only.
 
 ## Pull
 
@@ -117,7 +157,15 @@ scripts/
   verify-image.sh                    check an image against the pins
   assemble-index.sh                  publish the multi-arch tag (arm64 here + amd64 upstream)
   write-published.py                 write published.yaml, the digests attached to a release
+  push-spinnaker.py                  verify the Spinnaker archives against the pins, push them
+  verify-spinnaker.py                check pushed Spinnaker images against the pins (registry API)
+  write-published-spinnaker.py       add the Spinnaker images to published.yaml
+  inventory-spinnaker.py             read facts (config, OS, JVM, packages) out of the archives
+  spinnaker_archive.py               shared code: archive reader, registry client
   module_tar.py                      save the Go module set as a deterministic tar
+images/spinnaker/1.25.4/
+  inputs.env                         pins: archive sha256, image ID, manifest digest per service
+  NOTICE                             provenance, licence and source facts
 .github/workflows/istio-pilot.yml    CI: build on arm64, verify, push, index, attest, record
 ```
 

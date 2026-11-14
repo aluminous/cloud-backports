@@ -110,3 +110,91 @@ version; checked with Python 3.13 (Mockyard) and 3.15 (this script) giving the s
 
 `--engine podman` works rootful or rootless. On macOS the bind mounts (`-v`) need the
 checkout under a path the Podman machine shares (`/Users` by default).
+
+## Spinnaker 1.25.4 archive (publishing)
+
+This is not a build: the images are upstream's, saved earlier, and are pushed as they are.
+Requirements: `python3` (3.11+, standard library only), the five archive files named in
+[`images/spinnaker/1.25.4/inputs.env`](images/spinnaker/1.25.4/inputs.env) (the old test
+harness's bundle cache, `.tools/bundle-cache/<id>/images/`; read in place, never modified), a
+registry login, about 3.1 GB of upload. No container engine is needed.
+
+```bash
+export ARCHIVES=/path/to/bundle-cache/<id>/images
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --convert-only    # checks everything, contacts nothing
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --result out/push.json
+scripts/verify-spinnaker.py --blobs                                   # from the registry, against the pins
+scripts/write-published-spinnaker.py --result out/push.json           # published.yaml
+```
+
+Credentials, never on the command line: for ghcr.io a personal access token (classic) of the
+publishing user with the `write:packages` scope (and `read:packages` to verify a private
+package), passed as `REGISTRY_USERNAME` and `REGISTRY_PASSWORD` (or `REGISTRY_TOKEN`) in the
+environment, or as a docker-style auth file (`docker login ghcr.io`, or `--auth-file`,
+`REGISTRY_AUTH_FILE`; credential helpers are not supported, only the `auth` entry). The target
+namespace is `IMAGE_NAMESPACE` in `registry.env`, or `--namespace`. The first push creates
+the packages **private**; making them public, and linking them to this repository, is done in
+the GitHub package settings (the manifests carry the `org.opencontainers.image.source`
+annotation that GitHub uses to link a package to a repository; not tested against ghcr.io).
+
+What `push-spinnaker.py` does for each image, one at a time: checks the archive file's sha256,
+the config digest (the image ID) and the layer count against the pins; hashes every layer and
+compares it with its `diff_id`; builds the OCI manifest and compares its digest with the pin
+(a mismatch aborts before any upload); uploads the layers, the config and then the manifest
+(chunked, skipping blobs the repository already has); and checks that the registry reports the
+pinned digest. The pushed layers are the archive's own uncompressed tars (media type
+`application/vnd.oci.image.layer.v1.tar`) and the config is the archive's own config file, so
+the registry holds the original image ID and diff_ids, and the manifest depends on nothing but
+the archive. Compressing the layers (gzip) was tried first and rejected: the same input and
+level gave different bytes with classic zlib 1.2.12 (macOS) and zlib-ng 1.3.1 (Fedora's
+Python 3.14), so a manifest digest could not be pinned across machines. The same manifest
+digests came out of `--convert-only` on macOS (Python 3.15) and in the Podman machine
+(Python 3.14). The cost is size: 3.1 GB stored and transferred instead of about half. Whether
+ghcr.io, Docker Engine and old container runtimes accept uncompressed OCI layers was tested
+only with a `registry:2` registry and Podman 6.1.
+
+### Dry run against a local registry
+
+```bash
+podman run -d --name backports-dryrun-registry -p 127.0.0.1:62924:5000 -v /var/lib/registry docker.io/library/registry:2
+scripts/push-spinnaker.py --archive-dir "$ARCHIVES" --namespace 127.0.0.1:62924/cloud-backports --insecure
+scripts/verify-spinnaker.py --namespace 127.0.0.1:62924/cloud-backports --insecure --blobs
+podman pull --tls-verify=false --platform linux/amd64 127.0.0.1:62924/cloud-backports/spinnaker-gate@sha256:<manifest digest>
+podman image inspect --format '{{.Id}}' <that reference>      # the pinned image ID
+podman rm -f -v backports-dryrun-registry
+```
+
+Measured on 2026-11-14 (Apple Silicon, Podman 6.1.4, registry on loopback): all five images
+pushed one after another in 17 s (clouddriver 10 s) into an empty repository path, and again
+in 19 s into a second path with the same digests; `verify-spinnaker.py --blobs` took 8 s; the
+pulled gate image reported the pinned image ID `7c2e8142…5c00` and manifest digest
+`a4f9ebe8…e5da`. Over the internet the time is the upload of 3.1 GB.
+
+### Upstream check
+
+Anonymous requests on 2026-11-14 (curl, no credentials, HTTP status of each; both registries
+serve manifest and tag-list requests anonymously):
+
+```
+GET https://us-docker.pkg.dev/v2/spinnaker-community/docker/<service>/manifests/<tag>   -> 404 MANIFEST_UNKNOWN
+    for clouddriver 7.3.3-20210322155326, front50 0.26.2-20210216140019, gate 1.21.0-20210215200018,
+        orca 2.19.0-20210209140018, rosco 0.24.0-20210210110018
+GET https://gcr.io/v2/spinnaker-marketplace/<service>/manifests/<tag>                   -> 404 MANIFEST_UNKNOWN (same five)
+GET https://us-docker.pkg.dev/v2/spinnaker-community/docker/<service>/tags/list         -> 200 (clouddriver, front50, gate, orca, rosco, echo)
+GET https://gcr.io/v2/spinnaker-marketplace/<service>/tags/list                         -> 200
+```
+
+The `us-docker` tag lists contain none of the five tags and no 1.25.x tag (420 clouddriver,
+278 front50, 359 gate, 356 orca and 285 rosco tags, of the 2025.0 and `spinnaker-1.37`/`1.38`
+generations). The old harness recorded only tags and the archives'
+file hashes, not registry digests, so there is no digest to try: pulling by digest could not be
+checked. Conclusion: upstream does not serve these images, the local archives are the only
+source, and a CI workflow that copies registry to registry is not possible for them (so there
+is no `spinnaker-archive.yml`).
+
+One exception found: `gcr.io/spinnaker-marketplace/echo:2.15.0-20201009170017` still resolves
+(`GET .../manifests/2.15.0-20201009170017` -> 200, manifest `sha256:6765ce1c…bdcd`, config
+`sha256:c6ca278c…0758`, 10 layers). The old harness's real-Spinnaker run used that image, not
+the release's echo (2.16.0-20210208200018, which is 404 at both registries). A local archive
+of it exists outside the harness directories (`mockyard/pocs/golden/out/images/`, 760 MB) and has
+the same config digest, so it is the same image; it is not part of the 1.25.4 pins.
