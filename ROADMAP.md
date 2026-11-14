@@ -33,7 +33,7 @@ under the upstream name.
 
 1. Open owner todo: merge the branch, then run `scripts/create-spinnaker-release.sh --run` on the
    machine that holds the archives. It needs `gh` logged in with permission to create releases
-   (a one-time upload of about 3.7 GB as release assets).
+   (a one-time upload of about 3.8 GB as release assets).
 2. Publish the draft release in the GitHub UI: the new tag `spinnaker-1.25.4` starts the
    workflow, which pushes the images to GHCR with the job's own `GITHUB_TOKEN`.
 3. In the GitHub package settings, set each new package public.

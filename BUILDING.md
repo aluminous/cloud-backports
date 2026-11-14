@@ -127,27 +127,41 @@ The route needs no personal access token: the archives and the source bundle are
 as assets of a GitHub release, and a workflow downloads them and pushes with the job's own
 `GITHUB_TOKEN` (`packages: write`).
 
-1. Merge the branch to the default branch (the tag created in step 5 points at its head and
-   the workflow file is read from the tagged commit).
+1. Merge the branch to the default branch. The draft release is created without a target, so
+   publishing it (step 5) creates the tag at the head of the default branch, and the workflow
+   file is read from that tagged commit; a manual run (`workflow_dispatch`) also needs the
+   workflow file on the default branch.
 2. On the machine that holds the archives, build the source bundle (needs the network; about
    an hour or more, mostly waiting for the mirrors; downloads are cached and resumable; the result is pinned):
-   `scripts/build-spinnaker-sources.py --out out/spinnaker-1.25.4-sources.tar` and check that it prints no
-   `MISSING` line and the sha256 in `inputs.env` (`SOURCES_BUNDLE_SHA256`).
-3. Check everything against the pins, without touching GitHub:
+   `scripts/build-spinnaker-sources.py --out out/spinnaker-1.25.4-sources.tar` and check that it
+   prints no `MISSING` line and the sha256 in `inputs.env` (`SOURCES_BUNDLE_SHA256`). If you
+   already hold an earlier copy of the bundle, `--seed-from OLD.tar` reuses its files (checked
+   against its MANIFEST) and downloads only what is new.
+3. Check everything against the pins, without touching GitHub (`ARCHIVES` is the directory with
+   the five archive files, as in the manual route below):
    `scripts/create-spinnaker-release.sh --archive-dir "$ARCHIVES" --sources-tar out/spinnaker-1.25.4-sources.tar`
    (prints what it would upload).
-4. Create the draft release and upload the six files (about 3.7 GB; each is under the
+4. Create the draft release and upload the six files (about 3.8 GB; each is under the
    2 GiB asset limit, clouddriver is 1.6 GB): the same command with `--run`, with `gh` logged in
    as a user who may create releases (`gh auth login`).
 5. In the GitHub UI, look at the draft's assets, then **publish** the release. Publishing creates
-   the tag `spinnaker-1.25.4`, which starts `.github/workflows/spinnaker-archive.yml`. (A run can
-   also be started by hand with `workflow_dispatch`, giving the release tag; the release must be
-   published, because `gh release download` finds a release by tag only once it is published.)
+   the tag `spinnaker-1.25.4`, and the tag push should start
+   `.github/workflows/spinnaker-archive.yml`. Look in the Actions tab; **if no run appears
+   within a minute or two, start it by hand** with the release tag: Actions, spinnaker-archive,
+   Run workflow, `release_tag` = `spinnaker-1.25.4`, or
+   `gh workflow run spinnaker-archive.yml -f release_tag=spinnaker-1.25.4`. The release must be
+   published first in either case: the workflow downloads the assets with `gh release download`,
+   which is expected to find a release by tag only once it is published, not while it is a
+   draft (not tested). To run again after a failure, use the same manual start; pushes are
+   idempotent (blobs already in the registry are skipped, manifests are put again with the same
+   digests).
 6. The workflow downloads the assets, checks the source bundle and the archives against the
    pins, pushes the five archive images and copies echo, runs
    `scripts/verify-spinnaker.py --blobs` (every manifest, config and layer byte against the
-   pins), writes `published.yaml` and attaches it to the release. Watch the run; a mismatch
-   fails it before anything is pushed (the manifest digest is checked before upload).
+   pins), writes `published.yaml` and attaches it to the release. Watch the run. A file that does
+   not match its pin fails the run before any push (the archive check step runs first); a
+   manifest digest that differs from its pin fails that image before its upload, but images
+   pushed earlier in the same run stay in the registry.
 7. **In the GitHub UI, after the first push:** open each new package (your profile, Packages:
    `spinnaker-clouddriver`, `-front50`, `-gate`, `-orca`, `-rosco`, `-echo`), Package settings,
    Change visibility, **Public**. Packages pushed by a workflow in a public repository may still
@@ -256,9 +270,13 @@ acceptance of uncompressed OCI layers and of the docker-format config, package v
 [`images/spinnaker/1.25.4/packages.tsv`](images/spinnaker/1.25.4/packages.tsv), which
 `scripts/inventory-spinnaker.py ARCHIVE... --packages-tsv` writes from the package databases of
 the images (echo's archive is the old harness's copy of the image whose config digest is pinned).
-Result of the run on 2026-11-14: 119 source packages (37 Alpine, 82 Debian), 511 files,
-620,062,720 bytes, sha256 `b4b8e62a…344a`, nothing missing; a second build from the cached
-downloads was byte-identical. Alpine files come from the aports repository at the recorded
+Result of the run on 2026-11-14: 132 source packages (37 Alpine, 95 Debian: 82 with a GPL or
+LGPL binary package and 13 whose licence could not be classified), 555 files, 668,078,080
+bytes, sha256 `2526fc60…187a`, nothing missing; rebuilds from the cached downloads, and from a
+bundle used as `--seed-from`, were byte-identical. `--seed-from OLD.tar` takes the packages
+that are already in an earlier bundle from it (every file checked against the sha512 in its
+MANIFEST) and downloads only the others; the second round of this bundle added the 13
+Debian packages that way. Alpine files come from the aports repository at the recorded
 commits (gitlab.alpinelinux.org API) and `distfiles.alpinelinux.org` or the upstream URL of the
 APKBUILD, every source checked against the APKBUILD's sha512; Debian files come from
 snapshot.debian.org, checked against its sha1 and the .dsc's sha256 (one component tarball of

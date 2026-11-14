@@ -69,11 +69,12 @@ Third-party content in the images (facts read from the layers)
     is OpenJDK 11.0.9 (release file as above); its licence is GPL-2.0 with the Classpath
     exception; the corresponding upstream source is the tag jdk-11.0.9-ga of
     https://github.com/openjdk/jdk11u (the same tarball as for Alpine's 11.0.9 build, in the
-    bundle under alpine/openjdk11-11.0.9_p11-r0/source/). Sources not recorded as GPL/LGPL in the
-    image (so not in the bundle): fontconfig, apr, apr-util, db5.3, cdebconf, openldap,
-    ncurses, p11-kit, pcre2, pcre3, openssl, tzdata, unzip (recorded licences are
-    missing or unstructured; the full list with licence fields is images/spinnaker/1.25.4/
-    packages.tsv, class "check" or "permissive").
+    bundle under alpine/openjdk11-11.0.9_p11-r0/source/). Thirteen sources whose licence the image
+    does not record in a form that can be classified mechanically are in the bundle as well
+    (BASIS unclassified in its MANIFEST): fontconfig, apr, apr-util, db5.3, cdebconf, openldap,
+    ncurses, p11-kit, pcre2, pcre3, openssl, tzdata, unzip. Debian sources whose binary
+    packages all record permissive licences are not (class "permissive" in
+    images/spinnaker/1.25.4/packages.tsv).
   Package totals (packages.tsv): 113 distinct apk package versions (48 with a GPL or LGPL
     licence field) in the five Alpine images, built from 60 aports origins (37 origin-and-commit
     builds of them carry a GPL/LGPL package); 178 dpkg packages (132 GPL/LGPL, 28 unclassified, 18 permissive) in echo. No package has only an MPL,
@@ -112,15 +113,16 @@ Where the corresponding source of the distribution packages is available
 
 The source bundle
   The corresponding source of every package whose recorded licence includes the GPL or LGPL
-  (37 Alpine source packages, 82 Debian source packages: 119 in all, 511 files, none missing)
-  is collected in the release asset spinnaker-1.25.4-sources.tar (620,062,720 bytes, sha256
-  b4b8e62a5fc2fc1d397ce587c25f5c209128b1bc48edc3e2c80abcb7c64d344a), released next to the images.
+  (37 Alpine and 82 Debian source packages), and of 13 further Debian source packages whose
+  licence could not be classified (132 source packages, 555 files, none missing), is
+  collected in the release asset spinnaker-1.25.4-sources.tar (668,078,080 bytes, sha256
+  2526fc6012612e7290fe6a0ef2ef2ef55ac1162403660714de4e0bc8246b187a), released next to the images.
   It contains, per Alpine package, every file of the package's aports directory at the recorded
   commit (APKBUILD and patches) and every remote source file of its APKBUILD, each checked
   against the APKBUILD's sha512 (and the aports files against their git blob ids); per Debian
   package the .dsc, upstream tarball(s) and Debian tarball from snapshot.debian.org, checked
   against the snapshot's sha1 and the .dsc's sha256. Its first entry, MANIFEST, lists package,
-  version, licence, commit or source reference, the images containing it, and every file with
+  version, licence, basis, commit or source reference, the images containing it, and every file with
   its sha512. The largest parts are the OpenJDK sources (112 MB and 86 MB), gcc-8 (84 MB) and
   glibc (17 MB). scripts/build-spinnaker-sources.py rebuilds it from packages.tsv (a second
   build from the same downloads gave a byte-identical tar); the tar holds the source as

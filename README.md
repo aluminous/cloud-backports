@@ -79,8 +79,9 @@ based, gzip layers), so its digest can be checked against gcr.io while it lasts.
 
 **Source bundle.** The images contain GPL and LGPL packages (Alpine's busybox, bash, OpenJDK
 with the Classpath exception; Debian's glibc, gcc, coreutils and more in echo). The
-corresponding source of every package whose licence field names the GPL or LGPL, 119 source
-packages, is released as `spinnaker-1.25.4-sources.tar` (620 MB, sha256 pinned in `inputs.env`)
+corresponding source of every package whose licence field names the GPL or LGPL, and of the
+Debian packages in echo whose licence could not be classified, 132 source packages, is released
+as `spinnaker-1.25.4-sources.tar` (668 MB, sha256 pinned in `inputs.env`)
 next to the images: [`images/spinnaker/1.25.4/NOTICE`](images/spinnaker/1.25.4/NOTICE) says
 what is in it and how it was checked.
 
@@ -91,7 +92,7 @@ istio-pilot (`ghcr.io/aluminous/cloud-backports/spinnaker-gate@sha256:<digest>` 
 
 ```bash
 scripts/verify-spinnaker.py                    # manifest, config and diff_ids from the registry
-scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.5 GB)
+scripts/verify-spinnaker.py --blobs            # also download and hash every layer (3.8 GB)
 ```
 
 The five archives are uploaded once as assets of a GitHub release and a workflow

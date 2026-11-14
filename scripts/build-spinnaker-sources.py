@@ -2,12 +2,14 @@
 """Build the source bundle for the copyleft packages in the Spinnaker archive images.
 
     build-spinnaker-sources.py [--list packages.tsv] [--extra sources-extra.tsv]
-                               [--cache DIR] [--out FILE.tar] [--jobs N] [--list-only]
+                               [--cache DIR] [--out FILE.tar] [--jobs N] [--seed-from OLD.tar]
+                               [--list-only]
 
 Input: images/spinnaker/1.25.4/packages.tsv (written by inventory-spinnaker.py: every apk and
 dpkg package of the six images, with licence, class, aports commit, images) and
 sources-extra.tsv (bundled components that are not distribution packages). For every source
-package that has a binary package whose licence field names the GPL or LGPL:
+package that has a binary package whose licence field names the GPL or LGPL (and, for Debian,
+every source package with a binary package whose licence could not be classified):
 
   * Alpine (apk): every file of the package's aports directory at the recorded commit (the
     APKBUILD, patches, init scripts: all part of the corresponding source; each checked against
@@ -20,7 +22,8 @@ package that has a binary package whose licence field names the GPL or LGPL:
 The result is one uncompressed tar with sorted entries, mtime 0, owner root and mode 0644, whose
 first entry is MANIFEST (package, version, licence, commit, images, every file with its sha512
 and size, and anything that could not be fetched). Downloads are cached; the tar is rebuilt from
-the cache. Exit status 1 if anything is missing (the tar is still written).
+the cache. --seed-from takes packages that an earlier bundle already holds from that tar (every
+file checked against its MANIFEST sha512) instead of downloading them. Exit status 1 if anything is missing (the tar is still written).
 Standard library only.
 """
 
@@ -209,6 +212,7 @@ class Item:
         self.files: list[tuple[str, Path, str, int]] = []  # (path in tar, cache file, sha512, size)
         self.missing: list[str] = []
         self.notes: list[str] = []
+        self.basis = ""
 
     @property
     def dirname(self) -> str:
@@ -396,8 +400,8 @@ def select(rows: list[list[str]], only_copyleft_licences: bool = True) -> list[I
     apk: dict[str, dict] = {}
     deb: dict[str, dict] = {}
     for kind, name, version, origin, lic, cls, commit, dist, images in rows:
-        if cls != "gpl":
-            continue
+        if cls != "gpl" and not (kind == "dpkg" and cls == "check"):
+            continue  # Debian packages whose licence could not be classified are included too
         if kind == "apk":
             g = apk.setdefault(f"{origin}@{commit}", {"origin": origin, "commit": commit, "v": {},
                                                       "lic": set(), "images": set(), "dist": set(),
@@ -408,6 +412,7 @@ def select(rows: list[list[str]], only_copyleft_licences: bool = True) -> list[I
             g = deb.setdefault(origin, {"v": {}, "lic": set(), "images": set(), "dist": set(), "bins": set()})
             g["bins"].add(name)
         g["lic"].add(lic)
+        g.setdefault("cls", set()).add(cls)
         g["images"].update(images.split(","))
         g["dist"].update(dist.split(","))
     items: list[Item] = []
@@ -416,26 +421,31 @@ def select(rows: list[list[str]], only_copyleft_licences: bool = True) -> list[I
         it = Item("alpine", g["origin"], version, "; ".join(sorted(g["lic"])), g["commit"],
                   ",".join(sorted(g["images"])), ",".join(sorted(g["bins"])))
         it.dist = sorted(g["dist"])
+        it.basis = "gpl-lgpl"
         items.append(it)
     for k, g in deb.items():
         src, _, ver = k.partition("=")
         it = Item("debian", src, ver, "; ".join(sorted(g["lic"])), k, ",".join(sorted(g["images"])),
                   ",".join(sorted(g["bins"])))
         it.dist = sorted(g["dist"])
+        it.basis = "gpl-lgpl" if "gpl" in g["cls"] else "unclassified"
         items.append(it)
     return sorted(items, key=lambda i: (i.kind, i.name, i.version))
 
 
 def manifest_text(items: list[Item], extra: list[Item]) -> str:
-    out = ["# Corresponding source of the GPL/LGPL-licensed packages in the Spinnaker 1.25.4 archive images",
+    out = ["# Corresponding source of the GPL/LGPL-licensed packages in the Spinnaker 1.25.4 archive images,",
+           "# and of the Debian packages of echo whose licence could not be classified (BASIS unclassified)",
            "# (built by scripts/build-spinnaker-sources.py from images/spinnaker/1.25.4/packages.tsv).",
-           "# PACKAGE: kind name version | licence | origin reference | images containing it | binary packages",
+           "# PACKAGE: kind name version; LICENCE, REFERENCE, BASIS (gpl-lgpl or unclassified), IMAGES, BINARY-PACKAGES",
            "# FILE: sha512 size path (relative to the top of this tar)",
            "# MISSING: something that could not be fetched or verified", ""]
     for it in items + extra:
         out.append(f"PACKAGE {it.kind} {it.name} {it.version}")
         out.append(f"  LICENCE {it.licence}")
         out.append(f"  REFERENCE {it.ref}")
+        if it.basis:
+            out.append(f"  BASIS {it.basis}")
         out.append(f"  IMAGES {it.images}")
         if it.classes:
             out.append(f"  BINARY-PACKAGES {it.classes}")
@@ -468,6 +478,34 @@ def write_tar(dest: Path, items: list[Item], extra: list[Item], manifest: str) -
                     tf.addfile(ti, fh)
 
 
+def seed_items(seed: Path, cache: Path) -> dict[tuple[str, str, str], tuple[list, list[str]]]:
+    """Read a bundle built earlier: for each package its files (extracted into the cache,
+    each checked against the sha512 in the bundle's MANIFEST) and notes."""
+    out: dict = {}
+    d = cache / "seed"
+    d.mkdir(parents=True, exist_ok=True)
+    with tarfile.open(seed) as tf:
+        manifest = tf.extractfile("MANIFEST").read().decode()
+        cur = None
+        for line in manifest.splitlines():
+            if line.startswith("PACKAGE "):
+                _, kind, name, version = line.split(" ", 3)
+                cur = out[(kind, name, version)] = ([], [])
+            elif cur is not None and line.startswith("  FILE "):
+                _, sha, size, path = line.split(None, 3)
+                dest = d / sha
+                if not dest.is_file():
+                    with tf.extractfile(path) as src, dest.open("wb") as dst:
+                        while block := src.read(1 << 20):
+                            dst.write(block)
+                if digest_file(dest, "sha512") != sha:
+                    raise SystemExit(f"seed {seed}: {path} does not match its sha512 in MANIFEST")
+                cur[0].append((path, dest, sha, int(size)))
+            elif cur is not None and line.startswith("  NOTE "):
+                cur[1].append(line[7:])
+    return out
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("--list", type=Path, default=PINDIR / "packages.tsv")
@@ -475,6 +513,8 @@ def main() -> None:
     p.add_argument("--cache", type=Path, default=ROOT / "out" / "sources-cache")
     p.add_argument("--out", type=Path, default=ROOT / "out" / "spinnaker-1.25.4-sources.tar")
     p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--seed-from", type=Path, help="an earlier bundle: packages in it are taken "
+                   "from it (files verified against its MANIFEST) instead of downloaded")
     p.add_argument("--list-only", action="store_true", help="print the selected packages and stop")
     a = p.parse_args()
     items = select(read_tsv(a.list))
@@ -485,7 +525,7 @@ def main() -> None:
             it = Item("extra", name, version, lic, url, images, "")
             extra.append(it)
             extra_args.append((it, url, sha256))
-    print(f"{len(items)} source packages with a GPL/LGPL binary package "
+    print(f"{len(items)} source packages (GPL/LGPL, or unclassified Debian) "
           f"({sum(i.kind == 'alpine' for i in items)} alpine, {sum(i.kind == 'debian' for i in items)} debian), "
           f"{len(extra)} extra", flush=True)
     if a.list_only:
@@ -493,6 +533,17 @@ def main() -> None:
             print(i.kind, i.name, i.version, i.licence, i.images)
         return
     f = Fetcher(a.cache)
+    todo = items
+    if a.seed_from:
+        seeded = seed_items(a.seed_from, a.cache)
+        todo = []
+        for it in items:
+            got = seeded.get((it.kind, it.name, it.version))
+            if got:
+                it.files, it.notes = list(got[0]), list(got[1])
+            else:
+                todo.append(it)
+        print(f"{len(items) - len(todo)} packages taken from {a.seed_from.name}, {len(todo)} to fetch", flush=True)
 
     def work(it: Item) -> Item:
         try:
@@ -511,7 +562,7 @@ def main() -> None:
         return it
 
     with cf.ThreadPoolExecutor(a.jobs) as ex:
-        list(ex.map(work, items))
+        list(ex.map(work, todo))
     for it, url, sha in extra_args:
         collect_extra(f, it, url, sha)
         print(f"  extra   {it.name}-{it.version}: {len(it.files)} files"
