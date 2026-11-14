@@ -4,7 +4,7 @@
 * reading a docker-archive tar (manifest.json, config, layer tars)
 * the OCI manifest built from an archive's own bytes (uncompressed layers, so the registry
   blobs are the archive's layer tars and nothing depends on a compressor)
-* a small registry client (Distribution API v2: bearer or basic auth, chunked blob upload,
+* a small registry client (Distribution API v2: bearer or basic auth, streamed or chunked blob upload,
   manifest put/get)
 
 Used by push-spinnaker.py, verify-spinnaker.py and inventory-spinnaker.py.
@@ -38,7 +38,7 @@ CONFIG_TYPE = "application/vnd.oci.image.config.v1+json"
 MANIFEST_TYPE = "application/vnd.oci.image.manifest.v1+json"
 INDEX_TYPE = "application/vnd.oci.image.index.v1+json"
 DOCKER_MANIFEST_TYPE = "application/vnd.docker.distribution.manifest.v2+json"
-CHUNK = 32 * 1024 * 1024
+SMALL_CHUNK = 4 * 1024 * 1024  # the largest Content-Range chunk ghcr.io accepts
 BLOCK = 1024 * 1024
 
 
@@ -364,33 +364,71 @@ class Registry:
             resp.close()
             resp._conn.close()
 
+    def _absolute(self, loc: str) -> str:
+        if loc.startswith("/"):
+            return ("http://" if self.insecure else "https://") + self.host + loc
+        return loc
+
+    def _start_upload(self, repo: str) -> str:
+        s, h, body = self.request("POST", f"/v2/{repo}/blobs/uploads/", repo, "pull,push",
+                                  headers={"Content-Length": "0"})
+        if s != 202:
+            raise Error(f"start upload to {repo}: HTTP {s} {body[:200]!r}")
+        return self._absolute(h["location"])
+
+    def _send_blob(self, repo: str, loc: str, size: int, f, chunk: int) -> tuple[str, str | None]:
+        """Send the blob's bytes to an open upload. chunk 0: one PATCH streaming the whole blob
+        (what container engines do); otherwise PATCHes of at most `chunk` bytes with
+        Content-Range. Returns (upload location, None) or (location, why the registry refused
+        this way of sending), so the caller can try the other way."""
+        if chunk == 0:
+            try:
+                s, h, body = self.request(
+                    "PATCH", loc, repo, "pull,push", body=f, length=size,
+                    headers={"Content-Type": "application/octet-stream"})
+            except (OSError, http.client.HTTPException) as e:
+                return loc, f"streamed upload to {repo} broke off: {e}"
+            if s in (413, 416):
+                return loc, f"streamed upload to {repo}: HTTP {s} {body[:200]!r}"
+            if s != 202:
+                raise Error(f"upload to {repo}: HTTP {s} {body[:200]!r}")
+            return self._absolute(h.get("location", loc)), None
+        offset = 0
+        while offset < size:
+            n = min(chunk, size - offset)
+            data = f.read(n)
+            s, h, body = self.request(
+                "PATCH", loc, repo, "pull,push", body=data,
+                headers={"Content-Type": "application/octet-stream",
+                         "Content-Range": f"{offset}-{offset + n - 1}"})
+            if s in (413, 416) and offset == 0:
+                return loc, f"upload of a {n}-byte chunk to {repo}: HTTP {s} {body[:200]!r}"
+            if s != 202:
+                raise Error(f"upload chunk to {repo}: HTTP {s} {body[:200]!r}")
+            loc = self._absolute(h.get("location", loc))
+            offset += n
+        return loc, None
+
     def upload_blob(self, repo: str, digest: str, size: int, source) -> str:
-        """Upload one blob (chunked) unless the repository already has it.
-        Returns 'exists' or 'uploaded'."""
+        """Upload one blob unless the repository already has it. Returns 'exists' or
+        'uploaded'. Registries differ in what they accept (ghcr.io refuses Content-Range
+        chunks over 4 MiB), so the blob is streamed in one PATCH first and, if the registry
+        refuses that, sent again in SMALL_CHUNK pieces. SPINNAKER_UPLOAD_CHUNK=<bytes> forces
+        chunks of that size (0: streaming only)."""
         if self.blob_exists(repo, digest):
             return "exists"
-        s, h, _ = self.request("POST", f"/v2/{repo}/blobs/uploads/", repo, "pull,push",
-                               headers={"Content-Length": "0"})
-        if s != 202:
-            raise Error(f"start upload to {repo}: HTTP {s}")
-        loc = h["location"]
-        if loc.startswith("/"):
-            loc = ("http://" if self.insecure else "https://") + self.host + loc
-        with source() as f:
-            offset = 0
-            while offset < size:
-                n = min(CHUNK, size - offset)
-                chunk = f.read(n)
-                s, h, body = self.request(
-                    "PATCH", loc, repo, "pull,push", body=chunk,
-                    headers={"Content-Type": "application/octet-stream",
-                             "Content-Range": f"{offset}-{offset + n - 1}"})
-                if s != 202:
-                    raise Error(f"upload chunk to {repo}: HTTP {s} {body[:200]!r}")
-                loc = h.get("location", loc)
-                if loc.startswith("/"):
-                    loc = ("http://" if self.insecure else "https://") + self.host + loc
-                offset += n
+        forced = os.environ.get("SPINNAKER_UPLOAD_CHUNK")
+        ways = [int(forced)] if forced not in (None, "") else [0, SMALL_CHUNK]
+        loc, refused = "", None
+        for way in ways:
+            loc = self._start_upload(repo)
+            with source() as f:
+                loc, refused = self._send_blob(repo, loc, size, f, way)
+            if refused is None:
+                break
+            print(f"    note: {refused}", flush=True)
+        if refused is not None:
+            raise Error(refused)
         sep = "&" if "?" in loc else "?"
         s, h, body = self.request("PUT", f"{loc}{sep}digest={digest}", repo, "pull,push",
                                   headers={"Content-Length": "0"})
